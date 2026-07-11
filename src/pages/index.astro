@@ -1,0 +1,829 @@
+---
+const ebooks = [
+  {
+    titulo: "Cuidados del Recién Nacido",
+    categoria: "Salud y familia",
+    descripcion:
+      "Guía práctica para acompañar los primeros días del recién nacido con información clara y educativa.",
+    precio: "$9.990",
+    icono: "👶",
+  },
+  {
+    titulo: "Sopas Caseras",
+    categoria: "Cocina",
+    descripcion:
+      "Una selección de recetas tradicionales, nutritivas y reconfortantes para disfrutar en familia.",
+    precio: "$7.990",
+    icono: "🍲",
+  },
+  {
+    titulo: "Lactancia Materna",
+    categoria: "Maternidad",
+    descripcion:
+      "Orientaciones prácticas sobre posiciones, agarre, extracción, conservación y cuidados.",
+    precio: "$8.990",
+    icono: "🤱",
+  },
+];
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <meta
+      name="description"
+      content="Educare Publishing: ebooks y recursos digitales para aprender, enseñar y crecer."
+    />
+
+    <title>Educare Publishing | Ebooks y aprendizaje digital</title>
+  </head>
+
+  <body>
+    <header class="header">
+      <a class="brand" href="/">
+        <span class="brand-icon">EP</span>
+
+        <span>
+          <strong>Educare</strong>
+          <small>Publishing</small>
+        </span>
+      </a>
+
+      <nav aria-label="Navegación principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#ebooks">Ebooks</a>
+        <a href="#categorias">Categorías</a>
+        <a href="#nosotros">Nosotros</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+
+      <a class="header-button" href="#ebooks">Ver catálogo</a>
+    </header>
+
+    <main>
+      <section class="hero" id="inicio">
+        <div class="hero-content">
+          <span class="eyebrow">EDITORIAL DIGITAL</span>
+
+          <h1>
+            Conocimiento que inspira,
+            <span>educa y transforma.</span>
+          </h1>
+
+          <p>
+            Descubre ebooks prácticos sobre salud, educación, cocina y
+            desarrollo personal, creados para acompañarte en cada etapa.
+          </p>
+
+          <div class="hero-actions">
+            <a class="primary-button" href="#ebooks">Explorar ebooks</a>
+            <a class="secondary-button" href="#nosotros">
+              Conoce nuestra editorial
+            </a>
+          </div>
+
+          <div class="benefits">
+            <span>✓ Compra segura</span>
+            <span>✓ Descarga digital</span>
+            <span>✓ Lectura inmediata</span>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-label="Biblioteca digital">
+          <div class="book book-one">
+            <span>EDUCARE</span>
+            <strong>Salud y bienestar</strong>
+          </div>
+
+          <div class="book book-two">
+            <span>PUBLISHING</span>
+            <strong>Aprender para crecer</strong>
+          </div>
+
+          <div class="book book-three">
+            <span>COLECCIÓN</span>
+            <strong>Cocina y hogar</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="ebooks">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">NUESTRA COLECCIÓN</span>
+            <h2>Ebooks destacados</h2>
+          </div>
+
+          <p>
+            Material digital pensado para entregar información útil,
+            comprensible y aplicable.
+          </p>
+        </div>
+
+        <div class="ebook-grid">
+          {
+            ebooks.map((ebook) => (
+              <article class="ebook-card">
+                <div class="ebook-cover">
+                  <span>{ebook.icono}</span>
+                  <small>Educare Publishing</small>
+                  <strong>{ebook.titulo}</strong>
+                </div>
+
+                <div class="ebook-information">
+                  <span class="category">{ebook.categoria}</span>
+                  <h3>{ebook.titulo}</h3>
+                  <p>{ebook.descripcion}</p>
+
+                  <div class="ebook-footer">
+                    <strong>{ebook.precio}</strong>
+                    <a href="#contacto">Ver ebook</a>
+                  </div>
+                </div>
+              </article>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="categories" id="categorias">
+        <div class="section-heading light">
+          <div>
+            <span class="eyebrow">EXPLORA</span>
+            <h2>Categorías para cada interés</h2>
+          </div>
+        </div>
+
+        <div class="category-grid">
+          <article>
+            <span>🏥</span>
+            <h3>Salud y cuidados</h3>
+            <p>Guías educativas para pacientes, familias y cuidadores.</p>
+          </article>
+
+          <article>
+            <span>🍲</span>
+            <h3>Cocina y bienestar</h3>
+            <p>Recetas, alimentación y soluciones prácticas para el hogar.</p>
+          </article>
+
+          <article>
+            <span>🎓</span>
+            <h3>Educación</h3>
+            <p>Material para docentes, estudiantes y aprendizaje continuo.</p>
+          </article>
+
+          <article>
+            <span>📈</span>
+            <h3>Desarrollo profesional</h3>
+            <p>Herramientas para fortalecer habilidades y competencias.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="about section" id="nosotros">
+        <div class="about-visual">
+          <span>Educare</span>
+          <strong>Publishing</strong>
+          <p>Leer. Aprender. Transformar.</p>
+        </div>
+
+        <div class="about-content">
+          <span class="eyebrow">SOBRE NOSOTROS</span>
+          <h2>Publicamos conocimiento con propósito</h2>
+
+          <p>
+            Educare Publishing es una editorial digital orientada a crear
+            contenidos educativos de calidad, cercanos y accesibles.
+          </p>
+
+          <p>
+            Nuestro objetivo es transformar conocimientos especializados en
+            herramientas prácticas que ayuden a las personas a aprender,
+            enseñar y tomar mejores decisiones.
+          </p>
+
+          <a class="primary-button" href="#contacto">Conversemos</a>
+        </div>
+      </section>
+
+      <section class="contact" id="contacto">
+        <div>
+          <span class="eyebrow">MANTENTE INFORMADO</span>
+          <h2>Recibe noticias y nuevos lanzamientos</h2>
+          <p>
+            Próximamente incorporaremos el catálogo completo y el sistema de
+            compra y descarga automática.
+          </p>
+        </div>
+
+        <a
+          class="contact-button"
+          href="mailto:ventas@educarepublishing.cl"
+        >
+          ventas@educarepublishing.cl
+        </a>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand footer-brand" href="/">
+        <span class="brand-icon">EP</span>
+
+        <span>
+          <strong>Educare</strong>
+          <small>Publishing</small>
+        </span>
+      </a>
+
+      <p>© 2026 Educare Publishing. Todos los derechos reservados.</p>
+    </footer>
+  </body>
+</html>
+
+<style>
+  :root {
+    font-family:
+      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif;
+    color: #17324d;
+    background: #f8fafc;
+    font-synthesis: none;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background: #ffffff;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    min-height: 78px;
+    padding: 0 6%;
+    background: rgb(255 255 255 / 94%);
+    border-bottom: 1px solid #e6edf4;
+    backdrop-filter: blur(14px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .brand-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    color: #ffffff;
+    font-weight: 800;
+    background: linear-gradient(135deg, #0f7d83, #17456b);
+    border-radius: 12px;
+  }
+
+  .brand strong,
+  .brand small {
+    display: block;
+    line-height: 1.05;
+  }
+
+  .brand strong {
+    font-size: 1.08rem;
+  }
+
+  .brand small {
+    margin-top: 0.18rem;
+    color: #60758a;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 1.8rem;
+    color: #40566c;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+
+  nav a:hover {
+    color: #0f7d83;
+  }
+
+  .header-button,
+  .primary-button,
+  .secondary-button,
+  .contact-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.8rem 1.35rem;
+    font-weight: 700;
+    border-radius: 12px;
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .header-button,
+  .primary-button {
+    color: #ffffff;
+    background: #0f7d83;
+    box-shadow: 0 12px 30px rgb(15 125 131 / 20%);
+  }
+
+  .header-button:hover,
+  .primary-button:hover,
+  .secondary-button:hover,
+  .contact-button:hover {
+    transform: translateY(-2px);
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1.08fr 0.92fr;
+    align-items: center;
+    gap: 4rem;
+    min-height: 690px;
+    padding: 5rem 7%;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 80% 20%, rgb(70 180 177 / 18%), transparent 32%),
+      linear-gradient(135deg, #f2fbfa 0%, #f8fafc 48%, #eef4f8 100%);
+  }
+
+  .hero-content {
+    max-width: 680px;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    color: #0f7d83;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+
+  h1 {
+    max-width: 760px;
+    margin-bottom: 1.5rem;
+    color: #17324d;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(3rem, 6vw, 5.8rem);
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+  }
+
+  h1 span {
+    color: #0f7d83;
+  }
+
+  .hero-content > p {
+    max-width: 630px;
+    color: #526b80;
+    font-size: 1.12rem;
+    line-height: 1.8;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .secondary-button {
+    color: #17324d;
+    background: #ffffff;
+    border: 1px solid #d7e2eb;
+  }
+
+  .benefits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+    margin-top: 2rem;
+    color: #526b80;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  .hero-visual {
+    position: relative;
+    min-height: 500px;
+  }
+
+  .book {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 245px;
+    height: 355px;
+    padding: 2rem;
+    color: #ffffff;
+    border-radius: 8px 20px 20px 8px;
+    box-shadow: 0 35px 65px rgb(23 50 77 / 28%);
+  }
+
+  .book::before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 15px;
+    width: 2px;
+    content: "";
+    background: rgb(255 255 255 / 25%);
+  }
+
+  .book span {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+  }
+
+  .book strong {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2rem;
+    line-height: 1.08;
+  }
+
+  .book-one {
+    z-index: 3;
+    top: 55px;
+    left: 30%;
+    background: linear-gradient(145deg, #0f7d83, #084f57);
+    transform: rotate(-4deg);
+  }
+
+  .book-two {
+    z-index: 2;
+    top: 80px;
+    left: 8%;
+    background: linear-gradient(145deg, #17324d, #275e83);
+    transform: rotate(-13deg);
+  }
+
+  .book-three {
+    z-index: 1;
+    top: 105px;
+    left: 52%;
+    background: linear-gradient(145deg, #d68a43, #9a5727);
+    transform: rotate(8deg);
+  }
+
+  .section {
+    padding: 6rem 7%;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 3rem;
+    margin-bottom: 3rem;
+  }
+
+  .section-heading h2,
+  .about-content h2,
+  .contact h2 {
+    margin: 0.55rem 0 0;
+    color: #17324d;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.08;
+  }
+
+  .section-heading > p {
+    max-width: 480px;
+    margin-bottom: 0;
+    color: #60758a;
+    line-height: 1.7;
+  }
+
+  .ebook-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.7rem;
+  }
+
+  .ebook-card {
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e2eaf0;
+    border-radius: 20px;
+    box-shadow: 0 18px 48px rgb(23 50 77 / 8%);
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .ebook-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 25px 55px rgb(23 50 77 / 14%);
+  }
+
+  .ebook-cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 310px;
+    padding: 2rem;
+    color: #ffffff;
+    background:
+      radial-gradient(circle at 80% 10%, rgb(255 255 255 / 25%), transparent 30%),
+      linear-gradient(145deg, #0f7d83, #17324d);
+  }
+
+  .ebook-cover > span {
+    margin-bottom: auto;
+    font-size: 3rem;
+  }
+
+  .ebook-cover small {
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .ebook-cover strong {
+    max-width: 240px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2rem;
+    line-height: 1.08;
+  }
+
+  .ebook-information {
+    padding: 1.6rem;
+  }
+
+  .category {
+    color: #0f7d83;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .ebook-information h3 {
+    margin: 0.65rem 0;
+    font-size: 1.25rem;
+  }
+
+  .ebook-information p {
+    min-height: 76px;
+    color: #60758a;
+    font-size: 0.94rem;
+    line-height: 1.65;
+  }
+
+  .ebook-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid #e7edf2;
+  }
+
+  .ebook-footer strong {
+    font-size: 1.15rem;
+  }
+
+  .ebook-footer a {
+    color: #0f7d83;
+    font-weight: 800;
+  }
+
+  .categories {
+    padding: 6rem 7%;
+    color: #ffffff;
+    background: #17324d;
+  }
+
+  .section-heading.light h2 {
+    color: #ffffff;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.2rem;
+  }
+
+  .category-grid article {
+    padding: 2rem;
+    background: rgb(255 255 255 / 7%);
+    border: 1px solid rgb(255 255 255 / 13%);
+    border-radius: 18px;
+  }
+
+  .category-grid span {
+    font-size: 2rem;
+  }
+
+  .category-grid h3 {
+    margin: 1.2rem 0 0.7rem;
+  }
+
+  .category-grid p {
+    margin-bottom: 0;
+    color: #c1d0dc;
+    line-height: 1.65;
+  }
+
+  .about {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    align-items: center;
+    gap: 5rem;
+  }
+
+  .about-visual {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 430px;
+    padding: 4rem;
+    color: #ffffff;
+    background:
+      radial-gradient(circle at 80% 20%, rgb(255 255 255 / 18%), transparent 25%),
+      linear-gradient(145deg, #0f7d83, #17324d);
+    border-radius: 30px;
+  }
+
+  .about-visual span,
+  .about-visual strong {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(3rem, 7vw, 5rem);
+    line-height: 0.9;
+  }
+
+  .about-visual p {
+    margin: 2rem 0 0;
+    color: #cde6e6;
+  }
+
+  .about-content p {
+    color: #60758a;
+    font-size: 1.02rem;
+    line-height: 1.8;
+  }
+
+  .about-content .primary-button {
+    margin-top: 1rem;
+  }
+
+  .contact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+    margin: 0 7% 6rem;
+    padding: 3.5rem;
+    background: #eff8f7;
+    border-radius: 28px;
+  }
+
+  .contact p {
+    max-width: 680px;
+    margin: 1rem 0 0;
+    color: #60758a;
+    line-height: 1.7;
+  }
+
+  .contact-button {
+    flex-shrink: 0;
+    color: #ffffff;
+    background: #17324d;
+  }
+
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 2.4rem 7%;
+    color: #60758a;
+    border-top: 1px solid #e2eaf0;
+  }
+
+  footer p {
+    margin: 0;
+    font-size: 0.88rem;
+  }
+
+  @media (max-width: 1000px) {
+    nav {
+      display: none;
+    }
+
+    .hero {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-visual {
+      min-height: 430px;
+    }
+
+    .ebook-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .category-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .about {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .header {
+      padding: 0 5%;
+    }
+
+    .header-button {
+      display: none;
+    }
+
+    .hero,
+    .section,
+    .categories {
+      padding-right: 5%;
+      padding-left: 5%;
+    }
+
+    .hero {
+      min-height: auto;
+      padding-top: 4rem;
+      padding-bottom: 4rem;
+    }
+
+    h1 {
+      font-size: 3.4rem;
+    }
+
+    .hero-visual {
+      display: none;
+    }
+
+    .section-heading,
+    .contact,
+    footer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .ebook-grid,
+    .category-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .contact {
+      margin-right: 5%;
+      margin-left: 5%;
+      padding: 2rem;
+    }
+
+    .contact-button {
+      width: 100%;
+      font-size: 0.84rem;
+    }
+  }
+</style>
