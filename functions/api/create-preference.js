@@ -1,3 +1,9 @@
+export function onRequestGet() {
+  return Response.json({
+    ok: true,
+    mensaje: "API de Mercado Pago operativa",
+  });
+}
 export async function onRequestPost(context) {
   try {
     const { request, env } = context;
