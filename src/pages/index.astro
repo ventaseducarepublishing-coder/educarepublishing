@@ -1,22 +1,25 @@
 ---
 const ebooks = [
   {
-    titulo: "Cuidados del Recién Nacido",
+    id: "recien_nacido",
+    titulo: "Guía Completa del Primer Año del Bebé",
     categoria: "Salud y familia",
     descripcion:
       "Guía práctica para acompañar los primeros días del recién nacido con información clara y educativa.",
-    precio: "$9.990",
+    precio: "$39.990",
     icono: "👶",
   },
   {
-    titulo: "Sopas Caseras",
+    id: "sopas_caseras",
+    titulo: "Las Mejores Sopas del Mundo",
     categoria: "Cocina",
     descripcion:
       "Una selección de recetas tradicionales, nutritivas y reconfortantes para disfrutar en familia.",
-    precio: "$7.990",
+    precio: "$29.990",
     icono: "🍲",
   },
   {
+    id: "lactancia_materna",
     titulo: "Lactancia Materna",
     categoria: "Maternidad",
     descripcion:
@@ -41,24 +44,25 @@ const ebooks = [
     />
 
     <title>Educare Publishing | Ebooks y aprendizaje digital</title>
-  <!-- Google Analytics -->
-<script
-  is:inline
-  async
-  src="https://www.googletagmanager.com/gtag/js?id=G-GSFY0MZE56"
-></script>
 
-<script is:inline>
-  window.dataLayer = window.dataLayer || [];
+    <!-- Google Analytics -->
+    <script
+      is:inline
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-GSFY0MZE56"
+    ></script>
 
-  function gtag() {
-    window.dataLayer.push(arguments);
-  }
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
 
-  gtag('js', new Date());
-  gtag('config', 'G-GSFY0MZE56');
-</script>
-</head>
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+
+      gtag("js", new Date());
+      gtag("config", "G-GSFY0MZE56");
+    </script>
+  </head>
 
   <body>
     <header class="header">
@@ -159,7 +163,14 @@ const ebooks = [
 
                   <div class="ebook-footer">
                     <strong>{ebook.precio}</strong>
-                    <a href="#contacto">Ver ebook</a>
+
+                    <button
+                      type="button"
+                      class="buy-button"
+                      data-product-id={ebook.id}
+                    >
+                      Comprar ahora
+                    </button>
                   </div>
                 </div>
               </article>
@@ -234,8 +245,8 @@ const ebooks = [
           <span class="eyebrow">MANTENTE INFORMADO</span>
           <h2>Recibe noticias y nuevos lanzamientos</h2>
           <p>
-            Próximamente incorporaremos el catálogo completo y el sistema de
-            compra y descarga automática.
+            Compra ebooks digitales de forma segura y accede a contenidos
+            prácticos creados por Educare Publishing.
           </p>
         </div>
 
@@ -260,6 +271,69 @@ const ebooks = [
 
       <p>© 2026 Educare Publishing. Todos los derechos reservados.</p>
     </footer>
+
+    <script>
+      const buyButtons =
+        document.querySelectorAll<HTMLButtonElement>(".buy-button");
+
+      buyButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          const productId = button.dataset.productId;
+
+          if (!productId) {
+            alert("No se pudo identificar el ebook.");
+            return;
+          }
+
+          const originalText = button.textContent ?? "Comprar ahora";
+
+          button.disabled = true;
+          button.textContent = "Preparando pago...";
+
+          try {
+            const response = await fetch("/api/create-preference", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ productId }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(
+                data?.error ||
+                  data?.details?.message ||
+                  "No se pudo iniciar el pago."
+              );
+            }
+
+            const checkoutUrl =
+              data.init_point || data.sandbox_init_point;
+
+            if (!checkoutUrl) {
+              throw new Error(
+                "Mercado Pago no devolvió el enlace de pago."
+              );
+            }
+
+            window.location.href = checkoutUrl;
+          } catch (error) {
+            console.error("Error al iniciar el pago:", error);
+
+            alert(
+              error instanceof Error
+                ? error.message
+                : "Ocurrió un error al conectar con Mercado Pago."
+            );
+
+            button.disabled = false;
+            button.textContent = originalText;
+          }
+        });
+      });
+    </script>
   </body>
 </html>
 
@@ -633,6 +707,7 @@ const ebooks = [
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
     padding-top: 1rem;
     border-top: 1px solid #e7edf2;
   }
@@ -641,9 +716,30 @@ const ebooks = [
     font-size: 1.15rem;
   }
 
-  .ebook-footer a {
-    color: #0f7d83;
+  .buy-button {
+    min-height: 42px;
+    padding: 0.7rem 1rem;
+    color: #ffffff;
+    font: inherit;
     font-weight: 800;
+    background: #0f7d83;
+    border: 0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition:
+      transform 180ms ease,
+      background 180ms ease,
+      opacity 180ms ease;
+  }
+
+  .buy-button:hover:not(:disabled) {
+    background: #0b656b;
+    transform: translateY(-2px);
+  }
+
+  .buy-button:disabled {
+    cursor: wait;
+    opacity: 0.7;
   }
 
   .categories {
@@ -832,6 +928,15 @@ const ebooks = [
       grid-template-columns: 1fr;
     }
 
+    .ebook-footer {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .buy-button {
+      width: 100%;
+    }
+
     .contact {
       margin-right: 5%;
       margin-left: 5%;
@@ -844,3 +949,5 @@ const ebooks = [
     }
   }
 </style>
+
+
