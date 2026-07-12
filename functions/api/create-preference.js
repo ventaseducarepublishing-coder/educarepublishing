@@ -1,63 +1,52 @@
-export function onRequestGet() {
-  return Response.json({
-    ok: true,
-    mensaje: "API de Mercado Pago operativa",
-  });
-}
+import { MercadoPagoConfig, Preference } from "mercadopago";
+
 export async function onRequestPost(context) {
+
+  const client = new MercadoPagoConfig({
+    accessToken: context.env.MERCADOPAGO_ACCESS_TOKEN
+  });
+
+  const preference = new Preference(client);
+
   try {
-    const { request, env } = context;
 
-    const body = await request.json();
+    const body = await context.request.json();
 
-    const response = await fetch(
-      "https://api.mercadopago.com/checkout/preferences",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: [
-            {
-              title: body.title,
-              quantity: 1,
-              currency_id: "CLP",
-              unit_price: Number(body.price),
-            },
-          ],
-          back_urls: {
-            success: "https://educarepublishing.cl/success",
-            failure: "https://educarepublishing.cl/failure",
-            pending: "https://educarepublishing.cl/pending",
-          },
-          auto_return: "approved",
-        }),
+    const result = await preference.create({
+      body: {
+        items: [
+          {
+            title: body.title,
+            quantity: 1,
+            currency_id: "CLP",
+            unit_price: Number(body.price)
+          }
+        ]
       }
-    );
-
-    const data = await response.json();
-
-    return new Response(JSON.stringify(data), {
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
 
-  } catch (error) {
+    return Response.json({
+      id: result.id
+    });
 
-    return new Response(
-      JSON.stringify({
-        error: error.message,
-      }),
+  } catch (e) {
+
+    return Response.json(
       {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        error: e.message
+      },
+      {
+        status: 500
       }
     );
 
   }
+
+}
+
+export function onRequestGet() {
+  return Response.json({
+    ok: true,
+    mensaje: "API de Mercado Pago operativa"
+  });
 }
