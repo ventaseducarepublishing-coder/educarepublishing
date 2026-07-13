@@ -5,7 +5,11 @@ const product = Astro.url.searchParams.get("product") ?? "";
 <main class="card"><a class="brand" href="/"><span class="logo">EP</span>Educare Publishing</a><h1>Ingresa a tu cuenta</h1><p>Accede a tus ebooks y compras.</p>
 <form id="login-form"><label>Correo electrónico<input id="email" type="email" autocomplete="email" required/></label><label>Contraseña<input id="password" type="password" autocomplete="current-password" required/></label><button id="submit-button" type="submit">Ingresar</button><div id="message" class="message"></div></form>
 <p class="helper"><a href="/recuperar-contrasena">Olvidé mi contraseña</a></p><p class="helper">¿No tienes cuenta? <a href={`/registro${product ? `?product=${encodeURIComponent(product)}` : ""}`}>Crear cuenta gratis</a></p></main>
-<script define:vars={{ product }}>
+<<script>
+  import { supabase } from "../lib/supabase";
+
+  const product =
+    new URLSearchParams(window.location.search).get("product") ?? "";
 import { supabase } from "../lib/supabase";
 const form=document.querySelector("#login-form");const button=document.querySelector("#submit-button");const message=document.querySelector("#message");
 form?.addEventListener("submit",async(e)=>{e.preventDefault();const email=document.querySelector("#email")?.value.trim()??"";const password=document.querySelector("#password")?.value??"";button.disabled=true;button.textContent="Ingresando...";message.textContent="";

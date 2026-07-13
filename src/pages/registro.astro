@@ -5,16 +5,94 @@ const product = Astro.url.searchParams.get("product") ?? "";
 <main class="card"><a class="brand" href="/"><span class="logo">EP</span>Educare Publishing</a><h1>Crea tu cuenta gratis</h1><p>Guarda tus compras y accede a tu biblioteca personal.</p>
 <form id="register-form"><label>Nombre completo<input id="name" type="text" autocomplete="name" minlength="2" required/></label><label>Correo electrónico<input id="email" type="email" autocomplete="email" required/></label><label>Contraseña<input id="password" type="password" autocomplete="new-password" minlength="8" required/></label><label class="check"><input id="marketing" type="checkbox"/>Deseo recibir novedades y descuentos.</label><button id="submit-button" type="submit">Crear cuenta</button><div id="message" class="message"></div></form>
 <p class="helper">¿Ya tienes cuenta? <a href={`/login${product ? `?product=${encodeURIComponent(product)}` : ""}`}>Ingresar</a></p></main>
-<script define:vars={{ product }}>
-import { supabase } from "../lib/supabase";
-const form=document.querySelector("#register-form");const button=document.querySelector("#submit-button");const message=document.querySelector("#message");
-form?.addEventListener("submit",async(e)=>{e.preventDefault();const name=document.querySelector("#name")?.value.trim()??"";const email=document.querySelector("#email")?.value.trim()??"";const password=document.querySelector("#password")?.value??"";const marketing=document.querySelector("#marketing")?.checked??false;button.disabled=true;button.textContent="Creando cuenta...";message.textContent="";
-const redirectUrl=`${window.location.origin}/login${product?`?product=${encodeURIComponent(product)}`:""}`;
-const {data,error}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:redirectUrl,data:{full_name:name,marketing_consent:marketing}}});
-if(error){message.textContent=error.message;button.disabled=false;button.textContent="Crear cuenta";return}
-if(data.session){window.location.href=product?`/?buy=${encodeURIComponent(product)}`:"/mi-biblioteca";return}
-message.style.color="#0f7d83";message.textContent="Revisa tu correo y confirma la cuenta.";button.textContent="Correo enviado";});
-</script></body></html>
+<<script>
+  import { supabase } from "../lib/supabase";
+
+  const form =
+    document.querySelector<HTMLFormElement>("#register-form");
+
+  const button =
+    document.querySelector<HTMLButtonElement>("#submit-button");
+
+  const message =
+    document.querySelector<HTMLDivElement>("#message");
+
+  const product =
+    new URLSearchParams(window.location.search).get("product") ?? "";
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!button || !message) return;
+
+    const name =
+      document
+        .querySelector<HTMLInputElement>("#name")
+        ?.value.trim() ?? "";
+
+    const email =
+      document
+        .querySelector<HTMLInputElement>("#email")
+        ?.value.trim() ?? "";
+
+    const password =
+      document
+        .querySelector<HTMLInputElement>("#password")
+        ?.value ?? "";
+
+    const marketing =
+      document
+        .querySelector<HTMLInputElement>("#marketing")
+        ?.checked ?? false;
+
+    button.disabled = true;
+    button.textContent = "Creando cuenta...";
+
+    message.textContent = "";
+    message.style.color = "#b02a37";
+
+    const redirectUrl =
+      `${window.location.origin}/login` +
+      (product
+        ? `?product=${encodeURIComponent(product)}`
+        : "");
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: name,
+          marketing_consent: marketing,
+        },
+      },
+    });
+
+    if (error) {
+      console.error("Error de registro:", error);
+
+      message.textContent = error.message;
+      button.disabled = false;
+      button.textContent = "Crear cuenta";
+      return;
+    }
+
+    if (data.session) {
+      window.location.href = product
+        ? `/?buy=${encodeURIComponent(product)}`
+        : "/mi-biblioteca";
+
+      return;
+    }
+
+    message.style.color = "#0f7d83";
+    message.textContent =
+      "Cuenta creada. Revisa tu correo y confirma el registro.";
+
+    button.textContent = "Correo enviado";
+  });
+</script>
 
 <style>
 :root{font-family:Inter,system-ui,sans-serif;color:#17324d;background:#f4f8fa}
