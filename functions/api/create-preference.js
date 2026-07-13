@@ -24,13 +24,67 @@ export function onRequestGet() {
 
 export async function onRequestPost({ request, env }) {
   try {
-    if (!env.MERCADOPAGO_ACCESS_TOKEN) {
+    if (
+      !env.MERCADOPAGO_ACCESS_TOKEN ||
+      !env.PUBLIC_SUPABASE_URL ||
+      !env.PUBLIC_SUPABASE_ANON_KEY
+    ) {
       return Response.json(
         {
-          error: "Falta configurar el Access Token",
+          error: "Faltan variables del servidor",
         },
         {
           status: 500,
+        }
+      );
+    }
+
+    /*
+     * El index.astro envía el token de sesión mediante:
+     * Authorization: Bearer TOKEN
+     */
+    const authorization =
+      request.headers.get("Authorization") || "";
+
+    const accessToken =
+      authorization.startsWith("Bearer ")
+        ? authorization.slice(7)
+        : "";
+
+    if (!accessToken) {
+      return Response.json(
+        {
+          error: "Debes iniciar sesión para comprar",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    /*
+     * Validamos el token directamente contra Supabase.
+     * No confiamos solamente en los datos enviados por el navegador.
+     */
+    const userResponse = await fetch(
+      `${env.PUBLIC_SUPABASE_URL}/auth/v1/user`,
+      {
+        headers: {
+          apikey: env.PUBLIC_SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    const user = await userResponse.json();
+
+    if (!userResponse.ok || !user.id) {
+      return Response.json(
+        {
+          error: "La sesión no es válida o expiró",
+        },
+        {
+          status: 401,
         }
       );
     }
@@ -50,12 +104,18 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
+    const externalReference =
+      `${user.id}|${productId}`;
+
     const mpResponse = await fetch(
       "https://api.mercadopago.com/checkout/preferences",
       {
         method: "POST",
+
         headers: {
-          Authorization: `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}`,
+          Authorization:
+            `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}`,
+
           "Content-Type": "application/json",
         },
 
@@ -70,12 +130,30 @@ export async function onRequestPost({ request, env }) {
             },
           ],
 
-          external_reference: productId,
+          payer: {
+            email: user.email,
+          },
+
+          external_reference: externalReference,
+
+          metadata: {
+            user_id: user.id,
+            product_id: productId,
+            buyer_email: user.email,
+          },
+
+          notification_url:
+            "https://educarepublishing.cl/api/webhook",
 
           back_urls: {
-            success: "https://educarepublishing.cl/pago-exitoso",
-            failure: "https://educarepublishing.cl/pago-fallido",
-            pending: "https://educarepublishing.cl/pago-pendiente",
+            success:
+              "https://educarepublishing.cl/pago-exitoso",
+
+            failure:
+              "https://educarepublishing.cl/pago-fallido",
+
+            pending:
+              "https://educarepublishing.cl/pago-pendiente",
           },
 
           auto_return: "approved",
@@ -86,6 +164,11 @@ export async function onRequestPost({ request, env }) {
     const data = await mpResponse.json();
 
     if (!mpResponse.ok) {
+      console.error(
+        "Mercado Pago rechazó la preferencia:",
+        data
+      );
+
       return Response.json(
         {
           error: "Mercado Pago rechazó la solicitud",
@@ -103,9 +186,15 @@ export async function onRequestPost({ request, env }) {
       sandbox_init_point: data.sandbox_init_point,
     });
   } catch (error) {
+    console.error(
+      "Error creando preferencia:",
+      error
+    );
+
     return Response.json(
       {
         error: "No fue posible crear el pago",
+
         details:
           error instanceof Error
             ? error.message
