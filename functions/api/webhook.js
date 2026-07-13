@@ -17,10 +17,6 @@ const productos = {
 
 export async function onRequestPost({ request, env }) {
   try {
-    /*
-     * Mercado Pago espera una respuesta rápida.
-     * Primero leemos la notificación.
-     */
     const url = new URL(request.url);
 
     let notification = {};
@@ -41,8 +37,16 @@ export async function onRequestPost({ request, env }) {
       url.searchParams.get("type") ||
       url.searchParams.get("topic");
 
+    console.log("Webhook recibido:", {
+      paymentId,
+      notificationType,
+      liveMode: notification?.live_mode,
+    });
+
     /*
-     * Ignoramos eventos que no sean de pagos.
+     * Este endpoint procesa solamente pagos.
+     * Los demás eventos se confirman con 200,
+     * pero no se registran en purchases.
      */
     if (
       notificationType &&
@@ -51,14 +55,36 @@ export async function onRequestPost({ request, env }) {
       return Response.json({
         received: true,
         ignored: true,
+        type: notificationType,
       });
     }
 
     if (!paymentId) {
+      return Response.json({
+        received: true,
+        ignored: true,
+        message: "Notificación sin payment ID",
+      });
+    }
+
+    /*
+     * El simulador de Mercado Pago envía un ID
+     * ficticio que no corresponde a un pago real.
+     */
+    if (
+      notification?.live_mode === false &&
+      String(paymentId) === "123456"
+    ) {
+      console.log(
+        "Simulación de Mercado Pago recibida correctamente"
+      );
+
       return Response.json(
         {
           received: true,
-          message: "Notificación sin payment ID",
+          test: true,
+          message:
+            "Notificación simulada recibida correctamente",
         },
         {
           status: 200,
@@ -86,12 +112,14 @@ export async function onRequestPost({ request, env }) {
     }
 
     /*
-     * Consultamos el pago real en Mercado Pago.
-     * Nunca aprobamos una compra usando solamente
-     * el contenido recibido en el webhook.
+     * Consultamos el pago en Mercado Pago.
+     * No habilitamos ningún ebook basándonos
+     * solamente en el contenido del webhook.
      */
     const paymentResponse = await fetch(
-      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+      `https://api.mercadopago.com/v1/payments/${encodeURIComponent(
+        String(paymentId)
+      )}`,
       {
         headers: {
           Authorization:
@@ -111,6 +139,7 @@ export async function onRequestPost({ request, env }) {
       return Response.json(
         {
           error: "No fue posible validar el pago",
+          details: payment,
         },
         {
           status: 500,
@@ -118,8 +147,17 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
-    const reference =
-      String(payment.external_reference || "");
+    console.log("Pago consultado:", {
+      id: payment.id,
+      status: payment.status,
+      externalReference:
+        payment.external_reference,
+      amount: payment.transaction_amount,
+    });
+
+    const reference = String(
+      payment.external_reference || ""
+    );
 
     const [userId, productId] =
       reference.split("|");
@@ -142,10 +180,6 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
-    /*
-     * Verificamos que el valor pagado corresponda
-     * al precio definido en el servidor.
-     */
     const amount = Number(
       payment.transaction_amount
     );
@@ -172,12 +206,13 @@ export async function onRequestPost({ request, env }) {
       product_id: productId,
       product_title: producto.title,
       amount,
-      currency: payment.currency_id || "CLP",
+      currency:
+        payment.currency_id || "CLP",
       payment_id: String(payment.id),
-      status: String(payment.status || "unknown"),
+      status:
+        String(payment.status || "unknown"),
       buyer_email:
         payment.payer?.email || null,
-
       approved_at:
         payment.status === "approved"
           ? payment.date_approved
@@ -185,8 +220,9 @@ export async function onRequestPost({ request, env }) {
     };
 
     /*
-     * Upsert para evitar compras duplicadas si
-     * Mercado Pago vuelve a enviar el mismo webhook.
+     * payment_id ya tiene una restricción UNIQUE.
+     * Por eso Supabase puede actualizar el mismo
+     * registro si Mercado Pago reenvía el evento.
      */
     const supabaseResponse = await fetch(
       `${env.PUBLIC_SUPABASE_URL}/rest/v1/purchases?on_conflict=payment_id`,
@@ -223,7 +259,6 @@ export async function onRequestPost({ request, env }) {
         {
           error:
             "No fue posible registrar la compra",
-
           details,
         },
         {
@@ -232,13 +267,26 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
+    console.log(
+      "Compra registrada correctamente:",
+      {
+        userId,
+        productId,
+        paymentId: payment.id,
+        status: payment.status,
+      }
+    );
+
     return Response.json({
       received: true,
       payment_id: payment.id,
       status: payment.status,
     });
   } catch (error) {
-    console.error("Error en webhook:", error);
+    console.error(
+      "Error procesando el webhook:",
+      error
+    );
 
     return Response.json(
       {
