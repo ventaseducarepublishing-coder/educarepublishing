@@ -11,7 +11,7 @@ const productos = {
 
   lactancia_materna: {
     title: "Lactancia Materna",
-    price: 8990,
+    price: 50,
   },
 };
 
