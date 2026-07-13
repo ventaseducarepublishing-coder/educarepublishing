@@ -130,9 +130,7 @@ export async function onRequestPost({ request, env }) {
             },
           ],
 
-          payer: {
-            email: user.email,
-          },
+
 
           external_reference: externalReference,
 
