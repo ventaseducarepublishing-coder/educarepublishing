@@ -1,106 +1,397 @@
 ---
 const product = Astro.url.searchParams.get("product") ?? "";
 ---
-<!doctype html><html lang="es"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Crear cuenta | Educare Publishing</title></head><body>
-<main class="card"><a class="brand" href="/"><span class="logo">EP</span>Educare Publishing</a><h1>Crea tu cuenta gratis</h1><p>Guarda tus compras y accede a tu biblioteca personal.</p>
-<form id="register-form"><label>Nombre completo<input id="name" type="text" autocomplete="name" minlength="2" required/></label><label>Correo electrónico<input id="email" type="email" autocomplete="email" required/></label><label>Contraseña<input id="password" type="password" autocomplete="new-password" minlength="8" required/></label><label class="check"><input id="marketing" type="checkbox"/>Deseo recibir novedades y descuentos.</label><button id="submit-button" type="submit">Crear cuenta</button><div id="message" class="message"></div></form>
-<p class="helper">¿Ya tienes cuenta? <a href={`/login${product ? `?product=${encodeURIComponent(product)}` : ""}`}>Ingresar</a></p></main>
-<<script>
-  import { supabase } from "../lib/supabase";
 
-  const form =
-    document.querySelector<HTMLFormElement>("#register-form");
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>Crear cuenta | Educare Publishing</title>
+  </head>
 
-  const button =
-    document.querySelector<HTMLButtonElement>("#submit-button");
+  <body>
+    <main class="card">
+      <a class="brand" href="/">
+        <span class="logo">EP</span>
+        Educare Publishing
+      </a>
 
-  const message =
-    document.querySelector<HTMLDivElement>("#message");
+      <h1>Crea tu cuenta gratis</h1>
 
-  const product =
-    new URLSearchParams(window.location.search).get("product") ?? "";
+      <p>
+        Guarda tus compras y accede a tu biblioteca personal.
+      </p>
 
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
+      <form id="register-form">
+        <label>
+          Nombre completo
 
-    if (!button || !message) return;
+          <input
+            id="name"
+            type="text"
+            autocomplete="name"
+            minlength="2"
+            required
+          />
+        </label>
 
-    const name =
-      document
-        .querySelector<HTMLInputElement>("#name")
-        ?.value.trim() ?? "";
+        <label>
+          Correo electrónico
 
-    const email =
-      document
-        .querySelector<HTMLInputElement>("#email")
-        ?.value.trim() ?? "";
+          <input
+            id="email"
+            type="email"
+            autocomplete="email"
+            required
+          />
+        </label>
 
-    const password =
-      document
-        .querySelector<HTMLInputElement>("#password")
-        ?.value ?? "";
+        <label>
+          Contraseña
 
-    const marketing =
-      document
-        .querySelector<HTMLInputElement>("#marketing")
-        ?.checked ?? false;
+          <input
+            id="password"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+          />
+        </label>
 
-    button.disabled = true;
-    button.textContent = "Creando cuenta...";
+        <label class="check">
+          <input
+            id="marketing"
+            type="checkbox"
+          />
 
-    message.textContent = "";
-    message.style.color = "#b02a37";
+          Deseo recibir novedades y descuentos.
+        </label>
 
-    const redirectUrl =
-      `${window.location.origin}/login` +
-      (product
-        ? `?product=${encodeURIComponent(product)}`
-        : "");
+        <button
+          id="submit-button"
+          type="submit"
+        >
+          Crear cuenta
+        </button>
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: name,
-          marketing_consent: marketing,
-        },
-      },
-    });
+        <div
+          id="message"
+          class="message"
+          role="status"
+        ></div>
+      </form>
 
-    if (error) {
-      console.error("Error de registro:", error);
+      <p class="helper">
+        ¿Ya tienes cuenta?
 
-      message.textContent = error.message;
-      button.disabled = false;
-      button.textContent = "Crear cuenta";
-      return;
-    }
+        <a
+          href={`/login${
+            product
+              ? `?product=${encodeURIComponent(product)}`
+              : ""
+          }`}
+        >
+          Ingresar
+        </a>
+      </p>
+    </main>
 
-    if (data.session) {
-      window.location.href = product
-        ? `/?buy=${encodeURIComponent(product)}`
-        : "/mi-biblioteca";
+    <script>
+      import { supabase } from "../lib/supabase";
 
-      return;
-    }
+      const form =
+        document.querySelector<HTMLFormElement>(
+          "#register-form"
+        );
 
-    message.style.color = "#0f7d83";
-    message.textContent =
-      "Cuenta creada. Revisa tu correo y confirma el registro.";
+      const button =
+        document.querySelector<HTMLButtonElement>(
+          "#submit-button"
+        );
 
-    button.textContent = "Correo enviado";
-  });
-</script>
+      const message =
+        document.querySelector<HTMLDivElement>(
+          "#message"
+        );
+
+      const product =
+        new URLSearchParams(
+          window.location.search
+        ).get("product") ?? "";
+
+      form?.addEventListener(
+        "submit",
+        async (event) => {
+          event.preventDefault();
+
+          if (!button || !message) {
+            return;
+          }
+
+          const name =
+            document
+              .querySelector<HTMLInputElement>(
+                "#name"
+              )
+              ?.value.trim() ?? "";
+
+          const email =
+            document
+              .querySelector<HTMLInputElement>(
+                "#email"
+              )
+              ?.value.trim() ?? "";
+
+          const password =
+            document
+              .querySelector<HTMLInputElement>(
+                "#password"
+              )
+              ?.value ?? "";
+
+          const marketing =
+            document
+              .querySelector<HTMLInputElement>(
+                "#marketing"
+              )
+              ?.checked ?? false;
+
+          button.disabled = true;
+          button.textContent = "Creando cuenta...";
+
+          message.textContent = "";
+          message.style.color = "#b02a37";
+
+          try {
+            const redirectUrl =
+              `${window.location.origin}/login` +
+              (
+                product
+                  ? `?product=${encodeURIComponent(product)}`
+                  : ""
+              );
+
+            const { data, error } =
+              await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                  emailRedirectTo: redirectUrl,
+                  data: {
+                    full_name: name,
+                    marketing_consent: marketing,
+                  },
+                },
+              });
+
+            if (error) {
+              throw error;
+            }
+
+            if (data.session) {
+              window.location.href = product
+                ? `/?buy=${encodeURIComponent(product)}`
+                : "/mi-biblioteca";
+
+              return;
+            }
+
+            message.style.color = "#0f7d83";
+
+            message.textContent =
+              "Cuenta creada. Revisa tu correo y confirma el registro.";
+
+            button.textContent = "Correo enviado";
+          } catch (error) {
+            console.error(
+              "Error de registro:",
+              error
+            );
+
+            message.textContent =
+              error instanceof Error
+                ? error.message
+                : "No fue posible crear la cuenta.";
+
+            button.disabled = false;
+            button.textContent = "Crear cuenta";
+          }
+        }
+      );
+    </script>
+  </body>
+</html>
 
 <style>
-:root{font-family:Inter,system-ui,sans-serif;color:#17324d;background:#f4f8fa}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:2rem;background:linear-gradient(135deg,#f3fbfa,#f7fafc)}
-a{color:inherit;text-decoration:none}.card{width:min(100%,540px);padding:2rem;background:#fff;border:1px solid #dfe9ef;border-radius:24px;box-shadow:0 24px 70px rgb(23 50 77 / 12%)}
-.brand{display:inline-flex;align-items:center;gap:.75rem;margin-bottom:1.8rem;font-weight:800}.logo{display:grid;width:44px;height:44px;place-items:center;color:#fff;background:linear-gradient(135deg,#0f7d83,#17324d);border-radius:12px}
-h1{margin:0 0 .8rem;font-family:Georgia,serif;font-size:clamp(2.2rem,6vw,3.1rem);line-height:1}p{color:#60758a;line-height:1.7}
-form{display:grid;gap:1rem;margin-top:1.5rem}label{display:grid;gap:.45rem;font-weight:700}input{width:100%;min-height:48px;padding:.85rem 1rem;border:1px solid #cddbe5;border-radius:11px;font:inherit}
-button,.button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:.85rem 1rem;color:#fff;background:#0f7d83;border:0;border-radius:11px;font:inherit;font-weight:800;cursor:pointer}
-button:disabled{opacity:.65;cursor:wait}.message{min-height:24px;color:#b02a37}.helper{margin:1.2rem 0 0;text-align:center}.helper a{color:#0f7d83;font-weight:800}.check{display:flex;align-items:flex-start;gap:.7rem;font-weight:500}.check input{width:auto;min-height:auto;margin-top:.25rem}
+  :root {
+    font-family:
+      Inter,
+      system-ui,
+      sans-serif;
+
+    color: #17324d;
+    background: #f4f8fa;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+
+    background:
+      linear-gradient(
+        135deg,
+        #f3fbfa,
+        #f7fafc
+      );
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .card {
+    width: min(100%, 540px);
+    padding: 2rem;
+    background: #ffffff;
+    border: 1px solid #dfe9ef;
+    border-radius: 24px;
+
+    box-shadow:
+      0 24px 70px
+      rgb(23 50 77 / 12%);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.8rem;
+    font-weight: 800;
+  }
+
+  .logo {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    color: #ffffff;
+
+    background:
+      linear-gradient(
+        135deg,
+        #0f7d83,
+        #17324d
+      );
+
+    border-radius: 12px;
+  }
+
+  h1 {
+    margin: 0 0 0.8rem;
+    font-family: Georgia, serif;
+
+    font-size:
+      clamp(
+        2.2rem,
+        6vw,
+        3.1rem
+      );
+
+    line-height: 1;
+  }
+
+  p {
+    color: #60758a;
+    line-height: 1.7;
+  }
+
+  form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  label {
+    display: grid;
+    gap: 0.45rem;
+    font-weight: 700;
+  }
+
+  input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0.85rem 1rem;
+    border: 1px solid #cddbe5;
+    border-radius: 11px;
+    font: inherit;
+  }
+
+  input:focus {
+    outline:
+      3px solid
+      rgb(15 125 131 / 15%);
+
+    border-color: #0f7d83;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+    padding: 0.85rem 1rem;
+    color: #ffffff;
+    background: #0f7d83;
+    border: 0;
+    border-radius: 11px;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: 0.65;
+    cursor: wait;
+  }
+
+  .message {
+    min-height: 24px;
+    color: #b02a37;
+    line-height: 1.5;
+  }
+
+  .helper {
+    margin: 1.2rem 0 0;
+    text-align: center;
+  }
+
+  .helper a {
+    color: #0f7d83;
+    font-weight: 800;
+  }
+
+  .check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    font-weight: 500;
+  }
+
+  .check input {
+    width: auto;
+    min-height: auto;
+    margin-top: 0.25rem;
+  }
 </style>
