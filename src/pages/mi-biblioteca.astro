@@ -692,11 +692,17 @@
          * Así el navegador no la bloquea
          * como ventana emergente tardía.
          */
+        /*
+         * Abrimos la pestaña en el clic directo.
+         * No usamos "noopener" dentro de window.open porque
+         * algunos navegadores devuelven null aunque la pestaña
+         * sí se haya creado. Eso provocaba que la biblioteca
+         * también navegara al PDF y quedara una pestaña blanca.
+         */
         const readerWindow =
           window.open(
-            "",
-            "_blank",
-            "noopener,noreferrer"
+            "about:blank",
+            "_blank"
           );
 
         button.disabled = true;
@@ -706,74 +712,84 @@
         limpiarMensaje(message);
 
         try {
-          if (readerWindow) {
-            readerWindow.document.title =
-              "Preparando ebook";
+          if (!readerWindow) {
+            throw new Error(
+              "El navegador bloqueó la nueva pestaña. Permite ventanas emergentes para este sitio."
+            );
+          }
 
-            readerWindow.document.body.innerHTML = `
+          /*
+           * Cortamos la relación con la página original
+           * después de obtener una referencia válida.
+           */
+          readerWindow.opener = null;
+
+          readerWindow.document.title =
+            "Preparando ebook";
+
+          readerWindow.document.body.innerHTML = `
+            <div style="
+              min-height:100vh;
+              display:grid;
+              place-items:center;
+              padding:24px;
+              font-family:Arial,sans-serif;
+              color:#17324d;
+              background:#f4f8fa;
+            ">
               <div style="
-                min-height:100vh;
-                display:grid;
-                place-items:center;
-                padding:24px;
-                font-family:Arial,sans-serif;
-                color:#17324d;
-                background:#f4f8fa;
+                max-width:420px;
+                text-align:center;
               ">
                 <div style="
-                  max-width:420px;
-                  text-align:center;
+                  width:54px;
+                  height:54px;
+                  margin:0 auto 18px;
+                  border:5px solid #d8e7e8;
+                  border-top-color:#0f7d83;
+                  border-radius:50%;
+                  animation:spin 1s linear infinite;
+                "></div>
+
+                <h2 style="
+                  margin:0 0 10px;
                 ">
-                  <div style="
-                    width:54px;
-                    height:54px;
-                    margin:0 auto 18px;
-                    border:5px solid #d8e7e8;
-                    border-top-color:#0f7d83;
-                    border-radius:50%;
-                    animation:spin 1s linear infinite;
-                  "></div>
+                  Preparando tu ebook...
+                </h2>
 
-                  <h2 style="
-                    margin:0 0 10px;
-                  ">
-                    Preparando tu ebook...
-                  </h2>
-
-                  <p style="
-                    margin:0;
-                    color:#60758a;
-                    line-height:1.6;
-                  ">
-                    Estamos validando tu compra
-                    y generando un acceso seguro.
-                  </p>
-                </div>
-
-                <style>
-                  @keyframes spin {
-                    to {
-                      transform:
-                        rotate(360deg);
-                    }
-                  }
-                </style>
+                <p style="
+                  margin:0;
+                  color:#60758a;
+                  line-height:1.6;
+                ">
+                  Estamos validando tu compra
+                  y generando un acceso seguro.
+                </p>
               </div>
-            `;
-          }
+
+              <style>
+                @keyframes spin {
+                  to {
+                    transform:
+                      rotate(360deg);
+                  }
+                }
+              </style>
+            </div>
+          `;
 
           const url =
             await obtenerEnlace(
               productId
             );
 
-          if (readerWindow) {
-            readerWindow.location.href =
-              url;
-          } else {
-            window.location.href =
-              url;
-          }
+          /*
+           * Solo la pestaña nueva navega al PDF.
+           * La biblioteca permanece abierta y no se reemplaza.
+           */
+          readerWindow.location.replace(
+            url
+          );
 
           mostrarMensaje(
             message,
@@ -781,7 +797,10 @@
             "success"
           );
         } catch (error) {
-          if (readerWindow) {
+          if (
+            readerWindow &&
+            !readerWindow.closed
+          ) {
             readerWindow.close();
           }
 
