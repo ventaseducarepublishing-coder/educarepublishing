@@ -7,7 +7,7 @@ const ebooks = [
     descripcion:
       "Guía práctica para acompañar los primeros días del recién nacido con información clara y educativa.",
     precio: "$50.000",
-    icono: "👶",
+    portada: "/portadas/primer-ano-bebe.jpg",
   },
   {
     id: "sopas_caseras",
@@ -16,7 +16,7 @@ const ebooks = [
     descripcion:
       "Una selección de recetas tradicionales, nutritivas y reconfortantes para disfrutar en familia.",
     precio: "$29.990",
-    icono: "🍲",
+    portada: "/portadas/sopas-del-mundo.jpg",
   },
   {
     id: "lactancia_materna",
@@ -24,8 +24,8 @@ const ebooks = [
     categoria: "Maternidad",
     descripcion:
       "Orientaciones prácticas sobre posiciones, agarre, extracción, conservación y cuidados.",
-    precio: "$50.000",
-    icono: "🤱",
+    precio: "$8.990",
+    portada: "/portadas/lactancia-materna.jpg",
   },
 ];
 ---
@@ -154,9 +154,12 @@ const ebooks = [
             ebooks.map((ebook) => (
               <article class="ebook-card">
                 <div class="ebook-cover">
-                  <span>{ebook.icono}</span>
-                  <small>Educare Publishing</small>
-                  <strong>{ebook.titulo}</strong>
+                  <img
+                    src={ebook.portada}
+                    alt={`Portada del ebook ${ebook.titulo}`}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
 
                 <div class="ebook-information">
@@ -732,33 +735,18 @@ const ebooks = [
   }
 
   .ebook-cover {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    min-height: 310px;
-    padding: 2rem;
-    color: #ffffff;
-    background:
-      radial-gradient(circle at 80% 10%, rgb(255 255 255 / 25%), transparent 30%),
-      linear-gradient(145deg, #0f7d83, #17324d);
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: #edf3f5;
   }
 
-  .ebook-cover > span {
-    margin-bottom: auto;
-    font-size: 3rem;
-  }
-
-  .ebook-cover small {
-    margin-bottom: 0.6rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .ebook-cover strong {
-    max-width: 240px;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 2rem;
-    line-height: 1.08;
+  .ebook-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
   }
 
   .ebook-information {
@@ -1036,4 +1024,3 @@ const ebooks = [
     }
   }
 </style>
-
