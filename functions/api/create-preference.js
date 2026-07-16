@@ -1,7 +1,7 @@
 const productos = {
   recien_nacido: {
     title: "Guía Completa del Primer Año del Bebé",
-    price: 39990,
+    price: 50000,
   },
 
   sopas_caseras: {

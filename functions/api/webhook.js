@@ -1,7 +1,7 @@
 const productos = {
   recien_nacido: {
     title: "Guía Completa del Primer Año del Bebé",
-    price: 39990,
+    price: 50000,
   },
 
   sopas_caseras: {
@@ -11,7 +11,7 @@ const productos = {
 
   lactancia_materna: {
     title: "Lactancia Materna",
-    price: 40000,
+    price: 50000,
   },
 };
 
