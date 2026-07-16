@@ -1,4 +1,729 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Mi biblioteca | Educare Publishing</title></head><body>
-<main class="library"><header><a class="brand" href="/"><span class="logo">EP</span>Educare Publishing</a><button id="logout">Cerrar sesión</button></header><section><span class="eyebrow">MI CUENTA</span><h1>Mi biblioteca</h1><p id="welcome">Cargando...</p></section><div id="books" class="books"></div><section id="empty" class="empty" hidden><h2>Aún no tienes ebooks aprobados</h2><p>Cuando Mercado Pago confirme tu compra, aparecerá aquí.</p><a class="button" href="/#ebooks">Explorar ebooks</a></section></main>
-<script>import { supabase } from "../lib/supabase";const {data:{session}}=await supabase.auth.getSession();if(!session){window.location.href="/login"}else{const welcome=document.querySelector("#welcome");const books=document.querySelector("#books");const empty=document.querySelector("#empty");welcome.textContent=`Hola, ${session.user.user_metadata?.full_name||session.user.email}.`;const {data,error}=await supabase.from("purchases").select("id,product_id,product_title,amount,currency,status,created_at").eq("status","approved").order("created_at",{ascending:false});if(error){welcome.textContent="No fue posible cargar la biblioteca."}else if(!data?.length){empty.hidden=false}else{books.innerHTML=data.map(p=>`<article class="book-card"><div class="book-icon">📘</div><small>COMPRA APROBADA</small><h2>${escapeHtml(p.product_title)}</h2><p>${new Intl.NumberFormat("es-CL",{style:"currency",currency:p.currency||"CLP",maximumFractionDigits:0}).format(Number(p.amount||0))}</p></article>`).join("")}}document.querySelector("#logout")?.addEventListener("click",async()=>{await supabase.auth.signOut();window.location.href="/"});function escapeHtml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}</script></body></html>
-<style>:root{font-family:Inter,system-ui,sans-serif;color:#17324d;background:#f4f8fa}*{box-sizing:border-box}body{margin:0}.library{width:min(1120px,92%);margin:auto;padding:2rem 0 5rem}header{display:flex;justify-content:space-between;align-items:center;gap:2rem;margin-bottom:5rem}.brand{display:inline-flex;align-items:center;gap:.75rem;font-weight:800}.logo{display:grid;width:44px;height:44px;place-items:center;color:#fff;background:#0f7d83;border-radius:12px}button,.button{padding:.8rem 1rem;color:#fff;background:#17324d;border:0;border-radius:10px;font:inherit;font-weight:800;text-decoration:none}.eyebrow{color:#0f7d83;font-size:.75rem;font-weight:800;letter-spacing:.17em}h1{font:clamp(3rem,7vw,5rem)/1 Georgia,serif}.books{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-top:3rem}.book-card,.empty{padding:2rem;background:#fff;border:1px solid #dfe9ef;border-radius:20px;box-shadow:0 18px 50px rgb(23 50 77 / 8%)}.book-icon{font-size:3rem}.empty{text-align:center;margin-top:3rem}@media(max-width:760px){header{align-items:flex-start;flex-direction:column}.books{grid-template-columns:1fr}}</style>
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <title>
+      Mi biblioteca | Educare Publishing
+    </title>
+  </head>
+
+  <body>
+    <main class="library">
+      <header>
+        <a class="brand" href="/">
+          <span class="logo">EP</span>
+          Educare Publishing
+        </a>
+
+        <button
+          id="logout"
+          type="button"
+        >
+          Cerrar sesión
+        </button>
+      </header>
+
+      <section class="intro">
+        <span class="eyebrow">
+          MI CUENTA
+        </span>
+
+        <h1>Mi biblioteca</h1>
+
+        <p id="welcome">
+          Cargando...
+        </p>
+      </section>
+
+      <div
+        id="general-message"
+        class="general-message"
+        hidden
+      ></div>
+
+      <div
+        id="books"
+        class="books"
+      ></div>
+
+      <section
+        id="empty"
+        class="empty"
+        hidden
+      >
+        <h2>
+          Aún no tienes ebooks aprobados
+        </h2>
+
+        <p>
+          Cuando Mercado Pago confirme tu compra,
+          aparecerá aquí.
+        </p>
+
+        <a
+          class="button"
+          href="/#ebooks"
+        >
+          Explorar ebooks
+        </a>
+      </section>
+    </main>
+
+    <script>
+      import { supabase } from "../lib/supabase";
+
+      const welcome =
+        document.querySelector<HTMLParagraphElement>(
+          "#welcome"
+        );
+
+      const books =
+        document.querySelector<HTMLDivElement>(
+          "#books"
+        );
+
+      const empty =
+        document.querySelector<HTMLElement>(
+          "#empty"
+        );
+
+      const generalMessage =
+        document.querySelector<HTMLDivElement>(
+          "#general-message"
+        );
+
+      const logoutButton =
+        document.querySelector<HTMLButtonElement>(
+          "#logout"
+        );
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        window.location.href = "/login";
+      } else {
+        await loadLibrary();
+      }
+
+      async function loadLibrary() {
+        if (
+          !session ||
+          !welcome ||
+          !books ||
+          !empty
+        ) {
+          return;
+        }
+
+        const displayName =
+          session.user.user_metadata
+            ?.full_name ||
+          session.user.email ||
+          "lector";
+
+        welcome.textContent =
+          `Hola, ${displayName}.`;
+
+        const { data, error } =
+          await supabase
+            .from("purchases")
+            .select(
+              `
+                id,
+                user_id,
+                product_id,
+                product_title,
+                amount,
+                currency,
+                status,
+                created_at
+              `
+            )
+            .eq(
+              "user_id",
+              session.user.id
+            )
+            .eq(
+              "status",
+              "approved"
+            )
+            .order(
+              "created_at",
+              {
+                ascending: false,
+              }
+            );
+
+        if (error) {
+          console.error(
+            "Error cargando biblioteca:",
+            error
+          );
+
+          welcome.textContent =
+            "No fue posible cargar tu biblioteca.";
+
+          showGeneralMessage(
+            "Ocurrió un problema al consultar tus compras.",
+            "error"
+          );
+
+          return;
+        }
+
+        if (!data?.length) {
+          empty.hidden = false;
+          return;
+        }
+
+        empty.hidden = true;
+
+        books.innerHTML = data
+          .map((purchase) => {
+            const formattedAmount =
+              new Intl.NumberFormat(
+                "es-CL",
+                {
+                  style: "currency",
+                  currency:
+                    purchase.currency ||
+                    "CLP",
+                  maximumFractionDigits: 0,
+                }
+              ).format(
+                Number(
+                  purchase.amount || 0
+                )
+              );
+
+            return `
+              <article class="book-card">
+                <div class="book-icon">
+                  📘
+                </div>
+
+                <small>
+                  COMPRA APROBADA
+                </small>
+
+                <h2>
+                  ${escapeHtml(
+                    purchase.product_title
+                  )}
+                </h2>
+
+                <p class="price">
+                  ${escapeHtml(
+                    formattedAmount
+                  )}
+                </p>
+
+                <button
+                  class="download-button"
+                  type="button"
+                  data-product-id="${escapeHtml(
+                    purchase.product_id
+                  )}"
+                >
+                  Descargar ebook
+                </button>
+
+                <p
+                  class="download-message"
+                  aria-live="polite"
+                ></p>
+              </article>
+            `;
+          })
+          .join("");
+
+        attachDownloadEvents();
+      }
+
+      function attachDownloadEvents() {
+        const buttons =
+          document.querySelectorAll<HTMLButtonElement>(
+            ".download-button"
+          );
+
+        buttons.forEach((button) => {
+          button.addEventListener(
+            "click",
+            async () => {
+              await downloadEbook(
+                button
+              );
+            }
+          );
+        });
+      }
+
+      async function downloadEbook(
+        button: HTMLButtonElement
+      ) {
+        const productId =
+          button.dataset.productId ||
+          "";
+
+        const card =
+          button.closest<HTMLElement>(
+            ".book-card"
+          );
+
+        const message =
+          card?.querySelector<HTMLParagraphElement>(
+            ".download-message"
+          );
+
+        if (
+          !productId ||
+          !message
+        ) {
+          return;
+        }
+
+        button.disabled = true;
+        button.textContent =
+          "Preparando descarga...";
+
+        message.textContent = "";
+        message.className =
+          "download-message";
+
+        try {
+          const {
+            data: sessionData,
+            error: sessionError,
+          } =
+            await supabase.auth.getSession();
+
+          const currentSession =
+            sessionData.session;
+
+          if (
+            sessionError ||
+            !currentSession
+          ) {
+            window.location.href =
+              "/login";
+            return;
+          }
+
+          const response = await fetch(
+            "/api/download",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${currentSession.access_token}`,
+              },
+
+              body: JSON.stringify({
+                productId,
+              }),
+            }
+          );
+
+          const result =
+            await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              result.error ||
+              "No fue posible descargar el ebook"
+            );
+          }
+
+          if (!result.url) {
+            throw new Error(
+              "No se recibió un enlace de descarga"
+            );
+          }
+
+          message.textContent =
+            "Descarga autorizada. Abriendo ebook…";
+
+          message.classList.add(
+            "success"
+          );
+
+          const link =
+            document.createElement(
+              "a"
+            );
+
+          link.href = result.url;
+          link.target = "_blank";
+          link.rel =
+            "noopener noreferrer";
+
+          document.body.appendChild(
+            link
+          );
+
+          link.click();
+          link.remove();
+        } catch (error) {
+          console.error(
+            "Error descargando ebook:",
+            error
+          );
+
+          message.textContent =
+            error instanceof Error
+              ? error.message
+              : "No fue posible descargar el ebook";
+
+          message.classList.add(
+            "error"
+          );
+        } finally {
+          button.disabled = false;
+          button.textContent =
+            "Descargar ebook";
+        }
+      }
+
+      logoutButton?.addEventListener(
+        "click",
+        async () => {
+          if (!logoutButton) {
+            return;
+          }
+
+          logoutButton.disabled = true;
+          logoutButton.textContent =
+            "Cerrando sesión...";
+
+          await supabase.auth.signOut();
+
+          window.location.href = "/";
+        }
+      );
+
+      function showGeneralMessage(
+        text: string,
+        type:
+          | "success"
+          | "error"
+      ) {
+        if (!generalMessage) {
+          return;
+        }
+
+        generalMessage.hidden = false;
+        generalMessage.textContent =
+          text;
+
+        generalMessage.className =
+          `general-message ${type}`;
+      }
+
+      function escapeHtml(
+        value: unknown
+      ) {
+        return String(value ?? "")
+          .replaceAll(
+            "&",
+            "&amp;"
+          )
+          .replaceAll(
+            "<",
+            "&lt;"
+          )
+          .replaceAll(
+            ">",
+            "&gt;"
+          )
+          .replaceAll(
+            '"',
+            "&quot;"
+          )
+          .replaceAll(
+            "'",
+            "&#039;"
+          );
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  :root {
+    font-family:
+      Inter,
+      system-ui,
+      sans-serif;
+
+    color: #17324d;
+    background: #f4f8fa;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+
+    background:
+      linear-gradient(
+        135deg,
+        #f3fbfa,
+        #f7fafc
+      );
+  }
+
+  .library {
+    width: min(
+      1120px,
+      92%
+    );
+
+    margin: auto;
+    padding: 2rem 0 5rem;
+  }
+
+  header {
+    display: flex;
+    justify-content:
+      space-between;
+    align-items: center;
+
+    gap: 2rem;
+    margin-bottom: 5rem;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    color: inherit;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .logo {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+
+    color: #fff;
+
+    background:
+      linear-gradient(
+        135deg,
+        #0f7d83,
+        #17324d
+      );
+
+    border-radius: 12px;
+  }
+
+  button,
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 48px;
+    padding: 0.8rem 1rem;
+
+    color: #fff;
+    background: #17324d;
+
+    border: 0;
+    border-radius: 10px;
+
+    font: inherit;
+    font-weight: 800;
+    text-decoration: none;
+
+    cursor: pointer;
+  }
+
+  button:hover,
+  .button:hover {
+    transform:
+      translateY(-1px);
+  }
+
+  button:disabled {
+    opacity: 0.65;
+    cursor: wait;
+    transform: none;
+  }
+
+  .eyebrow {
+    color: #0f7d83;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.17em;
+  }
+
+  h1 {
+    margin: 1rem 0;
+
+    font:
+      clamp(
+        3rem,
+        7vw,
+        5rem
+      ) / 1
+      Georgia,
+      serif;
+  }
+
+  #welcome {
+    color: #60758a;
+    font-size: 1.05rem;
+  }
+
+  .books {
+    display: grid;
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap: 1.2rem;
+    margin-top: 3rem;
+  }
+
+  .book-card,
+  .empty {
+    padding: 2rem;
+
+    background: #fff;
+    border:
+      1px solid
+      #dfe9ef;
+
+    border-radius: 20px;
+
+    box-shadow:
+      0 18px 50px
+      rgb(
+        23 50 77 /
+        8%
+      );
+  }
+
+  .book-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .book-icon {
+    margin-bottom: 1rem;
+    font-size: 3rem;
+  }
+
+  .book-card small {
+    color: #0f7d83;
+
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .book-card h2 {
+    margin:
+      0.8rem 0
+      0.4rem;
+  }
+
+  .price {
+    margin:
+      0 0
+      1.5rem;
+
+    color: #60758a;
+  }
+
+  .download-button {
+    width: 100%;
+    margin-top: auto;
+    background: #0f7d83;
+  }
+
+  .download-message {
+    min-height: 22px;
+
+    margin:
+      0.8rem 0
+      0;
+
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .download-message.success,
+  .general-message.success {
+    color: #08765c;
+  }
+
+  .download-message.error,
+  .general-message.error {
+    color: #b02a37;
+  }
+
+  .general-message {
+    margin-top: 2rem;
+    padding: 1rem;
+
+    background: #fff;
+
+    border:
+      1px solid
+      #dfe9ef;
+
+    border-radius: 12px;
+  }
+
+  .empty {
+    margin-top: 3rem;
+    text-align: center;
+  }
+
+  @media (
+    max-width: 760px
+  ) {
+    header {
+      align-items:
+        flex-start;
+
+      flex-direction:
+        column;
+
+      margin-bottom:
+        3rem;
+    }
+
+    .books {
+      grid-template-columns:
+        1fr;
+    }
+  }
+</style>
