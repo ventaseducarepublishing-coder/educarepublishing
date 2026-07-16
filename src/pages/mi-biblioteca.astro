@@ -590,40 +590,49 @@
     display: grid;
     grid-template-columns:
       repeat(
-        3,
-        minmax(0, 1fr)
+        auto-fit,
+        minmax(280px, 320px)
       );
-
-    gap: 1.5rem;
+    justify-content: center;
+    gap: 2rem;
     margin-top: 3rem;
   }
 
   .book-card {
     display: flex;
+    width: 100%;
+    max-width: 320px;
     flex-direction: column;
     overflow: hidden;
 
     background: #fff;
-
-    border:
-      1px solid
-      #dfe9ef;
-
-    border-radius: 22px;
+    border: 1px solid #dfe9ef;
+    border-radius: 20px;
 
     box-shadow:
-      0 20px 55px
-      rgb(23 50 77 / 9%);
+      0 14px 38px
+      rgb(23 50 77 / 10%);
+
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  .book-card:hover {
+    transform: translateY(-5px);
+
+    box-shadow:
+      0 20px 48px
+      rgb(23 50 77 / 14%);
   }
 
   .cover-wrapper {
-    display: grid;
-    place-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-    width: 100%;
-    aspect-ratio: 4 / 5;
-
-    padding: 1rem;
+    min-height: 390px;
+    padding: 28px;
 
     background:
       linear-gradient(
@@ -635,16 +644,16 @@
 
   .book-cover {
     display: block;
-    width: 100%;
-    height: 100%;
-
+    width: auto;
+    max-width: 220px;
+    height: 330px;
     object-fit: contain;
 
-    border-radius: 10px;
+    border-radius: 8px;
 
     box-shadow:
-      0 14px 35px
-      rgb(23 50 77 / 15%);
+      0 12px 30px
+      rgb(23 50 77 / 18%);
   }
 
   .book-content {
@@ -760,16 +769,6 @@
     font-size: 3.4rem;
   }
 
-  @media (max-width: 900px) {
-    .books {
-      grid-template-columns:
-        repeat(
-          2,
-          minmax(0, 1fr)
-        );
-    }
-  }
-
   @media (max-width: 650px) {
     .site-header {
       align-items: flex-start;
@@ -784,6 +783,19 @@
 
     .books {
       grid-template-columns: 1fr;
+    }
+
+    .book-card {
+      max-width: 100%;
+    }
+
+    .cover-wrapper {
+      min-height: 360px;
+    }
+
+    .book-cover {
+      max-width: 205px;
+      height: 310px;
     }
   }
 </style>
