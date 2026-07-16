@@ -8,25 +8,33 @@
       content="width=device-width, initial-scale=1"
     />
 
-    <title>
-      Mi biblioteca | Educare Publishing
-    </title>
+    <title>Mi biblioteca | Educare Publishing</title>
   </head>
 
   <body>
     <main class="library">
-      <header>
+      <header class="site-header">
         <a class="brand" href="/">
           <span class="logo">EP</span>
-          Educare Publishing
+
+          <span>
+            Educare Publishing
+          </span>
         </a>
 
-        <button
-          id="logout"
-          type="button"
-        >
-          Cerrar sesión
-        </button>
+        <div class="header-actions">
+          <a class="home-link" href="/">
+            Volver a la tienda
+          </a>
+
+          <button
+            id="logout"
+            class="logout-button"
+            type="button"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
       <section class="intro">
@@ -47,23 +55,26 @@
         hidden
       ></div>
 
-      <div
+      <section
         id="books"
         class="books"
-      ></div>
+        aria-live="polite"
+      ></section>
 
       <section
         id="empty"
         class="empty"
         hidden
       >
+        <div class="empty-icon">📚</div>
+
         <h2>
           Aún no tienes ebooks aprobados
         </h2>
 
         <p>
           Cuando Mercado Pago confirme tu compra,
-          aparecerá aquí.
+          el ebook aparecerá automáticamente aquí.
         </p>
 
         <a
@@ -78,215 +89,243 @@
     <script>
       import { supabase } from "../lib/supabase";
 
+      const covers = {
+        recien_nacido:
+          "/portadas/primer-ano-bebe.png",
+
+        sopas_caseras:
+          "/portadas/sopas-del-mundo.png",
+
+        lactancia_materna:
+          "/portadas/lactancia-materna.png",
+      };
+
       const welcome =
-        document.querySelector<HTMLParagraphElement>(
-          "#welcome"
-        );
+        document.querySelector("#welcome");
 
       const books =
-        document.querySelector<HTMLDivElement>(
-          "#books"
-        );
+        document.querySelector("#books");
 
       const empty =
-        document.querySelector<HTMLElement>(
-          "#empty"
-        );
+        document.querySelector("#empty");
 
       const generalMessage =
-        document.querySelector<HTMLDivElement>(
-          "#general-message"
-        );
+        document.querySelector("#general-message");
 
       const logoutButton =
-        document.querySelector<HTMLButtonElement>(
-          "#logout"
-        );
+        document.querySelector("#logout");
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      iniciarBiblioteca();
 
-      if (!session) {
-        window.location.href = "/login";
-      } else {
-        await loadLibrary();
-      }
+      async function iniciarBiblioteca() {
+        try {
+          const {
+            data: { session },
+            error: sessionError,
+          } = await supabase.auth.getSession();
 
-      async function loadLibrary() {
-        if (
-          !session ||
-          !welcome ||
-          !books ||
-          !empty
-        ) {
-          return;
-        }
+          if (sessionError) {
+            throw sessionError;
+          }
 
-        const displayName =
-          session.user.user_metadata
-            ?.full_name ||
-          session.user.email ||
-          "lector";
+          if (!session) {
+            window.location.href = "/login";
+            return;
+          }
 
-        welcome.textContent =
-          `Hola, ${displayName}.`;
+          const displayName =
+            session.user.user_metadata?.full_name ||
+            session.user.email ||
+            "lector";
 
-        const { data, error } =
-          await supabase
-            .from("purchases")
-            .select(
-              `
-                id,
-                user_id,
-                product_id,
-                product_title,
-                amount,
-                currency,
-                status,
-                created_at
-              `
-            )
-            .eq(
-              "user_id",
-              session.user.id
-            )
-            .eq(
-              "status",
-              "approved"
-            )
-            .order(
-              "created_at",
-              {
-                ascending: false,
-              }
-            );
+          if (welcome) {
+            welcome.textContent =
+              `Hola, ${displayName}. Estos son tus ebooks disponibles.`;
+          }
 
-        if (error) {
+          const { data, error } =
+            await supabase
+              .from("purchases")
+              .select(
+                `
+                  id,
+                  user_id,
+                  product_id,
+                  product_title,
+                  amount,
+                  currency,
+                  status,
+                  approved_at,
+                  created_at
+                `
+              )
+              .eq(
+                "user_id",
+                session.user.id
+              )
+              .eq(
+                "status",
+                "approved"
+              )
+              .order(
+                "created_at",
+                {
+                  ascending: false,
+                }
+              );
+
+          if (error) {
+            throw error;
+          }
+
+          if (!data?.length) {
+            if (empty) {
+              empty.hidden = false;
+            }
+
+            return;
+          }
+
+          if (empty) {
+            empty.hidden = true;
+          }
+
+          renderBooks(
+            data,
+            session.access_token
+          );
+        } catch (error) {
           console.error(
             "Error cargando biblioteca:",
             error
           );
 
-          welcome.textContent =
-            "No fue posible cargar tu biblioteca.";
+          if (welcome) {
+            welcome.textContent =
+              "No fue posible cargar tu biblioteca.";
+          }
 
-          showGeneralMessage(
-            "Ocurrió un problema al consultar tus compras.",
+          mostrarMensajeGeneral(
+            error instanceof Error
+              ? error.message
+              : "Ocurrió un error inesperado.",
             "error"
           );
-
-          return;
         }
+      }
 
-        if (!data?.length) {
-          empty.hidden = false;
-          return;
-        }
+      function renderBooks(
+        purchases,
+        accessToken
+      ) {
+        if (!books) return;
 
-        empty.hidden = true;
-
-        books.innerHTML = data
+        books.innerHTML = purchases
           .map((purchase) => {
-            const formattedAmount =
-              new Intl.NumberFormat(
-                "es-CL",
-                {
-                  style: "currency",
-                  currency:
-                    purchase.currency ||
-                    "CLP",
-                  maximumFractionDigits: 0,
-                }
-              ).format(
-                Number(
-                  purchase.amount || 0
-                )
-              );
+            const cover =
+              covers[purchase.product_id] ||
+              "/favicon.svg";
+
+            const purchaseDate =
+              purchase.approved_at ||
+              purchase.created_at;
+
+            const formattedDate =
+              purchaseDate
+                ? new Intl.DateTimeFormat(
+                    "es-CL",
+                    {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    }
+                  ).format(
+                    new Date(purchaseDate)
+                  )
+                : "Fecha no disponible";
 
             return `
               <article class="book-card">
-                <div class="book-icon">
-                  📘
+                <div class="cover-wrapper">
+                  <img
+                    class="book-cover"
+                    src="${escapeHtml(cover)}"
+                    alt="Portada de ${escapeHtml(
+                      purchase.product_title
+                    )}"
+                    loading="lazy"
+                  />
                 </div>
 
-                <small>
-                  COMPRA APROBADA
-                </small>
+                <div class="book-content">
+                  <span class="status-badge">
+                    Compra aprobada
+                  </span>
 
-                <h2>
-                  ${escapeHtml(
-                    purchase.product_title
-                  )}
-                </h2>
+                  <h2>
+                    ${escapeHtml(
+                      purchase.product_title
+                    )}
+                  </h2>
 
-                <p class="price">
-                  ${escapeHtml(
-                    formattedAmount
-                  )}
-                </p>
+                  <p class="purchase-date">
+                    Disponible desde
+                    ${escapeHtml(formattedDate)}
+                  </p>
 
-                <button
-                  class="download-button"
-                  type="button"
-                  data-product-id="${escapeHtml(
-                    purchase.product_id
-                  )}"
-                >
-                  Descargar ebook
-                </button>
+                  <button
+                    class="download-button"
+                    type="button"
+                    data-product-id="${escapeHtml(
+                      purchase.product_id
+                    )}"
+                  >
+                    Descargar ebook
+                  </button>
 
-                <p
-                  class="download-message"
-                  aria-live="polite"
-                ></p>
+                  <p
+                    class="download-message"
+                    aria-live="polite"
+                  ></p>
+                </div>
               </article>
             `;
           })
           .join("");
 
-        attachDownloadEvents();
-      }
-
-      function attachDownloadEvents() {
-        const buttons =
-          document.querySelectorAll<HTMLButtonElement>(
+        document
+          .querySelectorAll(
             ".download-button"
-          );
-
-        buttons.forEach((button) => {
-          button.addEventListener(
-            "click",
-            async () => {
-              await downloadEbook(
-                button
-              );
-            }
-          );
-        });
+          )
+          .forEach((button) => {
+            button.addEventListener(
+              "click",
+              async () => {
+                await descargarEbook(
+                  button,
+                  accessToken
+                );
+              }
+            );
+          });
       }
 
-      async function downloadEbook(
-        button: HTMLButtonElement
+      async function descargarEbook(
+        button,
+        accessToken
       ) {
         const productId =
-          button.dataset.productId ||
-          "";
+          button.dataset.productId || "";
 
         const card =
-          button.closest<HTMLElement>(
-            ".book-card"
-          );
+          button.closest(".book-card");
 
         const message =
-          card?.querySelector<HTMLParagraphElement>(
+          card?.querySelector(
             ".download-message"
           );
 
-        if (
-          !productId ||
-          !message
-        ) {
+        if (!productId || !message) {
           return;
         }
 
@@ -299,24 +338,6 @@
           "download-message";
 
         try {
-          const {
-            data: sessionData,
-            error: sessionError,
-          } =
-            await supabase.auth.getSession();
-
-          const currentSession =
-            sessionData.session;
-
-          if (
-            sessionError ||
-            !currentSession
-          ) {
-            window.location.href =
-              "/login";
-            return;
-          }
-
           const response = await fetch(
             "/api/download",
             {
@@ -327,7 +348,7 @@
                   "application/json",
 
                 Authorization:
-                  `Bearer ${currentSession.access_token}`,
+                  `Bearer ${accessToken}`,
               },
 
               body: JSON.stringify({
@@ -342,13 +363,13 @@
           if (!response.ok) {
             throw new Error(
               result.error ||
-              "No fue posible descargar el ebook"
+              "No fue posible descargar el ebook."
             );
           }
 
           if (!result.url) {
             throw new Error(
-              "No se recibió un enlace de descarga"
+              "El servidor no entregó el enlace de descarga."
             );
           }
 
@@ -360,19 +381,14 @@
           );
 
           const link =
-            document.createElement(
-              "a"
-            );
+            document.createElement("a");
 
           link.href = result.url;
           link.target = "_blank";
           link.rel =
             "noopener noreferrer";
 
-          document.body.appendChild(
-            link
-          );
-
+          document.body.appendChild(link);
           link.click();
           link.remove();
         } catch (error) {
@@ -384,11 +400,9 @@
           message.textContent =
             error instanceof Error
               ? error.message
-              : "No fue posible descargar el ebook";
+              : "No fue posible descargar el ebook.";
 
-          message.classList.add(
-            "error"
-          );
+          message.classList.add("error");
         } finally {
           button.disabled = false;
           button.textContent =
@@ -399,10 +413,6 @@
       logoutButton?.addEventListener(
         "click",
         async () => {
-          if (!logoutButton) {
-            return;
-          }
-
           logoutButton.disabled = true;
           logoutButton.textContent =
             "Cerrando sesión...";
@@ -413,48 +423,25 @@
         }
       );
 
-      function showGeneralMessage(
-        text: string,
-        type:
-          | "success"
-          | "error"
+      function mostrarMensajeGeneral(
+        text,
+        type
       ) {
-        if (!generalMessage) {
-          return;
-        }
+        if (!generalMessage) return;
 
         generalMessage.hidden = false;
-        generalMessage.textContent =
-          text;
-
+        generalMessage.textContent = text;
         generalMessage.className =
           `general-message ${type}`;
       }
 
-      function escapeHtml(
-        value: unknown
-      ) {
+      function escapeHtml(value) {
         return String(value ?? "")
-          .replaceAll(
-            "&",
-            "&amp;"
-          )
-          .replaceAll(
-            "<",
-            "&lt;"
-          )
-          .replaceAll(
-            ">",
-            "&gt;"
-          )
-          .replaceAll(
-            '"',
-            "&quot;"
-          )
-          .replaceAll(
-            "'",
-            "&#039;"
-          );
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
       }
     </script>
   </body>
@@ -483,26 +470,20 @@
       linear-gradient(
         135deg,
         #f3fbfa,
-        #f7fafc
+        #f8fafc
       );
   }
 
   .library {
-    width: min(
-      1120px,
-      92%
-    );
-
+    width: min(1180px, 92%);
     margin: auto;
     padding: 2rem 0 5rem;
   }
 
-  header {
+  .site-header {
     display: flex;
-    justify-content:
-      space-between;
+    justify-content: space-between;
     align-items: center;
-
     gap: 2rem;
     margin-bottom: 5rem;
   }
@@ -519,12 +500,11 @@
 
   .logo {
     display: grid;
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     place-items: center;
 
     color: #fff;
-
     background:
       linear-gradient(
         135deg,
@@ -532,7 +512,19 @@
         #17324d
       );
 
-    border-radius: 12px;
+    border-radius: 13px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .home-link {
+    color: #17324d;
+    font-weight: 750;
+    text-decoration: none;
   }
 
   button,
@@ -542,13 +534,13 @@
     justify-content: center;
 
     min-height: 48px;
-    padding: 0.8rem 1rem;
+    padding: 0.85rem 1.1rem;
 
     color: #fff;
     background: #17324d;
 
     border: 0;
-    border-radius: 10px;
+    border-radius: 11px;
 
     font: inherit;
     font-weight: 800;
@@ -559,8 +551,7 @@
 
   button:hover,
   .button:hover {
-    transform:
-      translateY(-1px);
+    transform: translateY(-1px);
   }
 
   button:disabled {
@@ -569,22 +560,22 @@
     transform: none;
   }
 
+  .intro {
+    max-width: 780px;
+  }
+
   .eyebrow {
     color: #0f7d83;
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.17em;
+    font-size: 0.78rem;
+    font-weight: 850;
+    letter-spacing: 0.18em;
   }
 
   h1 {
     margin: 1rem 0;
 
     font:
-      clamp(
-        3rem,
-        7vw,
-        5rem
-      ) / 1
+      clamp(3.2rem, 7vw, 5.4rem) / 1
       Georgia,
       serif;
   }
@@ -592,74 +583,119 @@
   #welcome {
     color: #60758a;
     font-size: 1.05rem;
+    line-height: 1.7;
   }
 
   .books {
     display: grid;
-
     grid-template-columns:
       repeat(
         3,
-        minmax(
-          0,
-          1fr
-        )
+        minmax(0, 1fr)
       );
 
-    gap: 1.2rem;
+    gap: 1.5rem;
     margin-top: 3rem;
-  }
-
-  .book-card,
-  .empty {
-    padding: 2rem;
-
-    background: #fff;
-    border:
-      1px solid
-      #dfe9ef;
-
-    border-radius: 20px;
-
-    box-shadow:
-      0 18px 50px
-      rgb(
-        23 50 77 /
-        8%
-      );
   }
 
   .book-card {
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+
+    background: #fff;
+
+    border:
+      1px solid
+      #dfe9ef;
+
+    border-radius: 22px;
+
+    box-shadow:
+      0 20px 55px
+      rgb(23 50 77 / 9%);
+  }
+
+  .cover-wrapper {
+    display: grid;
+    place-items: center;
+
+    width: 100%;
+    aspect-ratio: 4 / 5;
+
+    padding: 1rem;
+
+    background:
+      linear-gradient(
+        135deg,
+        #edf7f6,
+        #f7f3ed
+      );
+  }
+
+  .book-cover {
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    border-radius: 10px;
+
+    box-shadow:
+      0 14px 35px
+      rgb(23 50 77 / 15%);
+  }
+
+  .book-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
     align-items: flex-start;
+
+    padding: 1.6rem;
   }
 
-  .book-icon {
-    margin-bottom: 1rem;
-    font-size: 3rem;
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+
+    padding:
+      0.4rem
+      0.65rem;
+
+    color: #08765c;
+    background: #eaf8f2;
+
+    border-radius: 999px;
+
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 
-  .book-card small {
-    color: #0f7d83;
-
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
+  .status-badge::before {
+    content: "✓";
+    margin-right: 0.35rem;
   }
 
   .book-card h2 {
     margin:
-      0.8rem 0
-      0.4rem;
+      1rem 0
+      0.55rem;
+
+    font-size: 1.35rem;
+    line-height: 1.25;
   }
 
-  .price {
+  .purchase-date {
     margin:
       0 0
       1.5rem;
 
     color: #60758a;
+    line-height: 1.6;
   }
 
   .download-button {
@@ -704,26 +740,50 @@
 
   .empty {
     margin-top: 3rem;
+    padding: 3rem 2rem;
+
     text-align: center;
+    background: #fff;
+
+    border:
+      1px solid
+      #dfe9ef;
+
+    border-radius: 22px;
+
+    box-shadow:
+      0 20px 55px
+      rgb(23 50 77 / 8%);
   }
 
-  @media (
-    max-width: 760px
-  ) {
-    header {
-      align-items:
-        flex-start;
+  .empty-icon {
+    font-size: 3.4rem;
+  }
 
-      flex-direction:
-        column;
+  @media (max-width: 900px) {
+    .books {
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0, 1fr)
+        );
+    }
+  }
 
-      margin-bottom:
-        3rem;
+  @media (max-width: 650px) {
+    .site-header {
+      align-items: flex-start;
+      flex-direction: column;
+      margin-bottom: 3rem;
+    }
+
+    .header-actions {
+      width: 100%;
+      justify-content: space-between;
     }
 
     .books {
-      grid-template-columns:
-        1fr;
+      grid-template-columns: 1fr;
     }
   }
 </style>
