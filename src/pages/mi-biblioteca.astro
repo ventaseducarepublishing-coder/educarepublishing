@@ -1,7 +1,15 @@
 ---
 /*
- * Biblioteca personal de Educare Publishing.
- * Las tarjetas se generan con JavaScript, por eso los estilos usan is:global.
+ * Mi biblioteca — Educare Publishing
+ * Versión profesional con:
+ * - Supabase Auth
+ * - Compras aprobadas
+ * - Buscador y categorías
+ * - Lectura online
+ * - Descarga real mediante Blob
+ * - Diseño responsive
+ *
+ * Los estilos usan is:global porque las tarjetas se crean con JavaScript.
  */
 ---
 
@@ -13,6 +21,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1"
     />
+    <meta
+      name="description"
+      content="Biblioteca personal de ebooks adquiridos en Educare Publishing."
+    />
     <title>Mi biblioteca | Educare Publishing</title>
   </head>
 
@@ -21,10 +33,14 @@
       <div class="topbar-inner">
         <a class="brand" href="/">
           <span class="logo">EP</span>
-          <span>Educare Publishing</span>
+
+          <span class="brand-copy">
+            <strong>Educare</strong>
+            <small>Publishing</small>
+          </span>
         </a>
 
-        <nav class="nav">
+        <nav class="main-nav" aria-label="Navegación principal">
           <a href="/">Inicio</a>
           <a href="/#ebooks">Ebooks</a>
           <a class="active" href="/mi-biblioteca">
@@ -42,26 +58,48 @@
       </div>
     </header>
 
-    <main class="library">
-      <section class="intro">
-        <span class="eyebrow">MI CUENTA</span>
-        <h1>Mi biblioteca</h1>
-        <p id="welcome">Cargando...</p>
+    <main class="library-shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">MI CUENTA</span>
+          <h1>Mi biblioteca</h1>
+          <p id="welcome">
+            Cargando tus ebooks...
+          </p>
+        </div>
+
+        <div class="library-counter">
+          <strong id="book-count">0</strong>
+          <span>Ebooks disponibles</span>
+        </div>
       </section>
 
-      <section class="toolbar">
-        <input
-          id="search"
-          type="search"
-          placeholder="Buscar ebook"
-          autocomplete="off"
-        />
+      <section
+        class="toolbar"
+        aria-label="Herramientas de biblioteca"
+      >
+        <label class="search-field">
+          <span class="search-icon" aria-hidden="true">
+            ⌕
+          </span>
 
-        <select id="category-filter">
-          <option value="all">
-            Todas las categorías
-          </option>
-        </select>
+          <input
+            id="search"
+            type="search"
+            placeholder="Buscar por título, autor o categoría"
+            autocomplete="off"
+          />
+        </label>
+
+        <label class="category-field">
+          <span>Categoría</span>
+
+          <select id="category-filter">
+            <option value="all">
+              Todas las categorías
+            </option>
+          </select>
+        </label>
       </section>
 
       <div
@@ -72,28 +110,32 @@
 
       <section
         id="books"
-        class="books"
+        class="books-grid"
         aria-live="polite"
       ></section>
 
       <section
         id="no-results"
-        class="empty"
+        class="empty-state"
         hidden
       >
+        <span class="empty-icon">🔎</span>
         <h2>No encontramos resultados</h2>
-        <p>Prueba con otro título o categoría.</p>
+        <p>
+          Prueba con otro título, autor o categoría.
+        </p>
       </section>
 
       <section
         id="empty"
-        class="empty"
+        class="empty-state"
         hidden
       >
+        <span class="empty-icon">📚</span>
         <h2>Aún no tienes ebooks aprobados</h2>
         <p>
           Cuando Mercado Pago confirme tu compra,
-          el ebook aparecerá aquí.
+          el ebook aparecerá automáticamente aquí.
         </p>
 
         <a class="primary-link" href="/#ebooks">
@@ -107,40 +149,65 @@
 
       const catalog = {
         recien_nacido: {
-          cover: "/portadas/primer-ano-bebe.png",
-          author: "Andrea Carolina Reyes Hernández",
-          category: "Salud y familia",
+          cover:
+            "/portadas/primer-ano-bebe.png",
+          author:
+            "Andrea Carolina Reyes Hernández",
+          category:
+            "Salud y familia",
+          filename:
+            "guia-primer-ano-bebe.pdf",
         },
 
         sopas_caseras: {
-          cover: "/portadas/sopas-del-mundo.png",
-          author: "Educare Publishing",
-          category: "Cocina",
+          cover:
+            "/portadas/sopas-del-mundo.png",
+          author:
+            "Educare Publishing",
+          category:
+            "Cocina",
+          filename:
+            "las-mejores-sopas-del-mundo.pdf",
         },
 
         lactancia_materna: {
-          cover: "/portadas/lactancia-materna.png",
-          author: "Andrea Carolina Reyes Hernández",
-          category: "Maternidad",
+          cover:
+            "/portadas/lactancia-materna.png",
+          author:
+            "Andrea Carolina Reyes Hernández",
+          category:
+            "Maternidad",
+          filename:
+            "lactancia-materna.pdf",
         },
       };
 
       const welcome =
         document.querySelector("#welcome");
+
       const books =
         document.querySelector("#books");
+
       const empty =
         document.querySelector("#empty");
+
       const noResults =
         document.querySelector("#no-results");
+
       const generalMessage =
         document.querySelector("#general-message");
+
       const logoutButton =
         document.querySelector("#logout");
+
       const searchInput =
         document.querySelector("#search");
+
       const categoryFilter =
         document.querySelector("#category-filter");
+
+      const bookCount =
+        document.querySelector("#book-count");
 
       let purchases = [];
       let accessToken = "";
@@ -172,7 +239,7 @@
 
           if (welcome) {
             welcome.textContent =
-              `Hola, ${displayName}. Estos son tus ebooks disponibles.`;
+              `Hola, ${displayName}. Aquí puedes leer y descargar tus ebooks.`;
           }
 
           const { data, error } =
@@ -203,11 +270,20 @@
             ? data
             : [];
 
+          if (bookCount) {
+            bookCount.textContent =
+              String(purchases.length);
+          }
+
           if (!purchases.length) {
             if (empty) {
               empty.hidden = false;
             }
             return;
+          }
+
+          if (empty) {
+            empty.hidden = true;
           }
 
           cargarCategorias();
@@ -226,7 +302,8 @@
           mostrarMensajeGeneral(
             error instanceof Error
               ? error.message
-              : "Ocurrió un error inesperado."
+              : "Ocurrió un error inesperado.",
+            "error"
           );
         }
       }
@@ -244,7 +321,9 @@
               );
             })
           ),
-        ];
+        ].sort((a, b) =>
+          a.localeCompare(b, "es")
+        );
 
         categoryFilter.innerHTML =
           `<option value="all">Todas las categorías</option>` +
@@ -279,6 +358,11 @@
                 purchase.product_title || ""
               ).toLocaleLowerCase("es");
 
+            const author =
+              String(
+                metadata.author || ""
+              ).toLocaleLowerCase("es");
+
             const category =
               String(
                 metadata.category || "General"
@@ -287,6 +371,7 @@
             const matchesSearch =
               !query ||
               title.includes(query) ||
+              author.includes(query) ||
               category
                 .toLocaleLowerCase("es")
                 .includes(query);
@@ -350,20 +435,21 @@
 
             return `
               <article class="book-card">
-                <div class="cover-wrapper">
+                <div class="cover-panel">
                   <img
                     class="book-cover"
                     src="${escapeHtml(cover)}"
                     alt="Portada de ${escapeHtml(
                       purchase.product_title
                     )}"
+                    loading="lazy"
                   />
                 </div>
 
                 <div class="book-content">
-                  <div class="labels">
+                  <div class="badges">
                     <span class="status-badge">
-                      Compra aprobada
+                      Compra verificada
                     </span>
 
                     <span class="category-badge">
@@ -377,14 +463,16 @@
                     )}
                   </h2>
 
-                  <p class="author">
+                  <p class="book-author">
                     ${escapeHtml(author)}
                   </p>
 
-                  <p class="purchase-date">
-                    Disponible desde
-                    ${escapeHtml(formattedDate)}
-                  </p>
+                  <div class="book-info">
+                    <span>Disponible desde</span>
+                    <strong>
+                      ${escapeHtml(formattedDate)}
+                    </strong>
+                  </div>
 
                   <div class="book-actions">
                     <button
@@ -409,7 +497,7 @@
                   </div>
 
                   <p
-                    class="download-message"
+                    class="action-message"
                     aria-live="polite"
                   ></p>
                 </div>
@@ -428,43 +516,115 @@
             button.addEventListener(
               "click",
               async () => {
-                await abrirEbook(
-                  button,
-                  false
-                );
+                await abrirOnline(button);
               }
             );
           });
 
         document
-          .querySelectorAll(".download-button")
+          .querySelectorAll(
+            ".download-button"
+          )
           .forEach((button) => {
             button.addEventListener(
               "click",
               async () => {
-                await abrirEbook(
-                  button,
-                  true
-                );
+                await descargarArchivo(button);
               }
             );
           });
       }
 
-      async function abrirEbook(
-        button,
-        forceDownload
-      ) {
+      async function obtenerEnlace(productId) {
+        const response = await fetch(
+          "/api/download",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Authorization:
+                `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              productId,
+            }),
+          }
+        );
+
+        const result =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.error ||
+            "No fue posible autorizar el ebook."
+          );
+        }
+
+        if (!result.url) {
+          throw new Error(
+            "El servidor no entregó el enlace del ebook."
+          );
+        }
+
+        return result.url;
+      }
+
+      async function abrirOnline(button) {
         const productId =
           button.dataset.productId || "";
 
-        const card =
-          button.closest(".book-card");
+        const message =
+          obtenerMensaje(button);
+
+        if (!productId || !message) {
+          return;
+        }
+
+        const originalText =
+          button.textContent;
+
+        button.disabled = true;
+        button.textContent = "Abriendo...";
+
+        limpiarMensaje(message);
+
+        try {
+          const url =
+            await obtenerEnlace(productId);
+
+          const newWindow =
+            window.open(
+              url,
+              "_blank",
+              "noopener,noreferrer"
+            );
+
+          if (!newWindow) {
+            window.location.href = url;
+          }
+
+          mostrarMensaje(
+            message,
+            "Ebook abierto en una nueva pestaña.",
+            "success"
+          );
+        } catch (error) {
+          mostrarError(message, error);
+        } finally {
+          button.disabled = false;
+          button.textContent =
+            originalText;
+        }
+      }
+
+      async function descargarArchivo(button) {
+        const productId =
+          button.dataset.productId || "";
 
         const message =
-          card?.querySelector(
-            ".download-message"
-          );
+          obtenerMensaje(button);
 
         if (!productId || !message) {
           return;
@@ -475,86 +635,105 @@
 
         button.disabled = true;
         button.textContent =
-          forceDownload
-            ? "Preparando descarga..."
-            : "Abriendo...";
+          "Preparando descarga...";
 
-        message.textContent = "";
-        message.className =
-          "download-message";
+        limpiarMensaje(message);
 
         try {
-          const response = await fetch(
-            "/api/download",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-                Authorization:
-                  `Bearer ${accessToken}`,
-              },
-              body: JSON.stringify({
-                productId,
-              }),
-            }
-          );
+          const signedUrl =
+            await obtenerEnlace(productId);
 
-          const result =
-            await response.json();
+          const fileResponse =
+            await fetch(signedUrl);
 
-          if (!response.ok) {
+          if (!fileResponse.ok) {
             throw new Error(
-              result.error ||
-              "No fue posible abrir el ebook."
+              "No fue posible obtener el archivo PDF."
             );
           }
 
-          if (!result.url) {
-            throw new Error(
-              "El servidor no entregó el enlace del ebook."
-            );
-          }
+          const fileBlob =
+            await fileResponse.blob();
+
+          const objectUrl =
+            URL.createObjectURL(fileBlob);
+
+          const filename =
+            catalog[productId]?.filename ||
+            `${productId}.pdf`;
 
           const link =
             document.createElement("a");
 
-          link.href = result.url;
-          link.target = "_blank";
-          link.rel =
-            "noopener noreferrer";
-
-          if (forceDownload) {
-            link.download = "";
-          }
+          link.href = objectUrl;
+          link.download = filename;
+          link.style.display = "none";
 
           document.body.appendChild(link);
           link.click();
           link.remove();
 
-          message.textContent =
-            forceDownload
-              ? "Descarga autorizada."
-              : "Ebook abierto en una nueva pestaña.";
+          window.setTimeout(() => {
+            URL.revokeObjectURL(objectUrl);
+          }, 1000);
 
-          message.classList.add("success");
+          mostrarMensaje(
+            message,
+            "La descarga comenzó correctamente.",
+            "success"
+          );
         } catch (error) {
           console.error(
-            "Error abriendo ebook:",
+            "Error descargando ebook:",
             error
           );
 
-          message.textContent =
-            error instanceof Error
-              ? error.message
-              : "No fue posible abrir el ebook.";
-
-          message.classList.add("error");
+          mostrarError(message, error);
         } finally {
           button.disabled = false;
           button.textContent =
             originalText;
         }
+      }
+
+      function obtenerMensaje(button) {
+        const card =
+          button.closest(".book-card");
+
+        return card?.querySelector(
+          ".action-message"
+        );
+      }
+
+      function limpiarMensaje(message) {
+        message.textContent = "";
+        message.className =
+          "action-message";
+      }
+
+      function mostrarMensaje(
+        message,
+        text,
+        type
+      ) {
+        message.textContent = text;
+        message.className =
+          `action-message ${type}`;
+      }
+
+      function mostrarError(
+        message,
+        error
+      ) {
+        console.error(error);
+
+        mostrarMensaje(
+          message,
+          error instanceof Error
+            ? error.message
+            : "No fue posible completar la operación.",
+          "error"
+        );
       }
 
       searchInput?.addEventListener(
@@ -580,13 +759,16 @@
         }
       );
 
-      function mostrarMensajeGeneral(text) {
+      function mostrarMensajeGeneral(
+        text,
+        type
+      ) {
         if (!generalMessage) return;
 
         generalMessage.hidden = false;
         generalMessage.textContent = text;
         generalMessage.className =
-          "general-message error";
+          `general-message ${type}`;
       }
 
       function escapeHtml(value) {
@@ -619,6 +801,11 @@
     margin: 0;
     min-height: 100vh;
     background:
+      radial-gradient(
+        circle at top left,
+        rgb(15 125 131 / 10%),
+        transparent 30rem
+      ),
       linear-gradient(
         135deg,
         #f3fbfa,
@@ -626,15 +813,21 @@
       );
   }
 
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
   .topbar {
     position: sticky;
     top: 0;
-    z-index: 20;
+    z-index: 30;
     background:
       rgb(255 255 255 / 94%);
     border-bottom:
       1px solid #dfe9ef;
-    backdrop-filter: blur(14px);
+    backdrop-filter: blur(15px);
   }
 
   .topbar-inner {
@@ -652,14 +845,30 @@
     align-items: center;
     gap: 0.75rem;
     color: inherit;
-    font-weight: 800;
     text-decoration: none;
+  }
+
+  .brand-copy {
+    display: grid;
+  }
+
+  .brand-copy strong {
+    line-height: 1;
+  }
+
+  .brand-copy small {
+    margin-top: 0.25rem;
+    color: #60758a;
+    font-size: 0.65rem;
+    font-weight: 850;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
   }
 
   .logo {
     display: grid;
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     place-items: center;
     color: #fff;
     background:
@@ -668,23 +877,36 @@
         #0f7d83,
         #17324d
       );
-    border-radius: 12px;
+    border-radius: 13px;
+    font-weight: 900;
   }
 
-  .nav {
+  .main-nav {
     display: flex;
-    gap: 1.4rem;
+    gap: 1.5rem;
   }
 
-  .nav a {
+  .main-nav a {
+    position: relative;
+    padding: 0.5rem 0;
     color: #51687d;
-    font-weight: 700;
+    font-weight: 750;
     text-decoration: none;
   }
 
-  .nav a.active,
-  .nav a:hover {
+  .main-nav a:hover,
+  .main-nav a.active {
     color: #0f7d83;
+  }
+
+  .main-nav a.active::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: #0f7d83;
+    content: "";
   }
 
   .logout-button,
@@ -698,16 +920,31 @@
     background: #17324d;
     border: 0;
     border-radius: 10px;
-    font: inherit;
     font-weight: 800;
     text-decoration: none;
     cursor: pointer;
   }
 
-  .library {
+  .logout-button:disabled {
+    opacity: 0.65;
+    cursor: wait;
+  }
+
+  .library-shell {
     width: min(1180px, 92%);
     margin: auto;
     padding: 4rem 0 6rem;
+  }
+
+  .hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .hero-copy {
+    max-width: 760px;
   }
 
   .eyebrow {
@@ -720,7 +957,7 @@
   h1 {
     margin: 1rem 0;
     font:
-      clamp(3rem, 7vw, 5rem) / 1
+      clamp(3rem, 7vw, 5.2rem) / 1
       Georgia,
       serif;
   }
@@ -732,33 +969,97 @@
     line-height: 1.7;
   }
 
+  .library-counter {
+    display: grid;
+    min-width: 175px;
+    padding: 1.25rem;
+    text-align: center;
+    background: #fff;
+    border:
+      1px solid #dfe9ef;
+    border-radius: 18px;
+    box-shadow:
+      0 15px 40px
+      rgb(23 50 77 / 8%);
+  }
+
+  .library-counter strong {
+    color: #0f7d83;
+    font-size: 2.2rem;
+  }
+
+  .library-counter span {
+    color: #60758a;
+    font-size: 0.85rem;
+    font-weight: 750;
+  }
+
   .toolbar {
     display: grid;
     grid-template-columns:
-      1fr
-      minmax(220px, 280px);
+      minmax(250px, 1fr)
+      minmax(210px, 280px);
     gap: 1rem;
     margin-top: 3rem;
     padding: 1rem;
     background: #fff;
     border:
       1px solid #dfe9ef;
-    border-radius: 16px;
+    border-radius: 18px;
+    box-shadow:
+      0 15px 40px
+      rgb(23 50 77 / 7%);
   }
 
-  .toolbar input,
-  .toolbar select {
-    min-height: 48px;
+  .search-field {
+    display: flex;
+    min-height: 50px;
+    align-items: center;
+    gap: 0.65rem;
     padding: 0 1rem;
+    border:
+      1px solid #cddbe5;
+    border-radius: 11px;
+  }
+
+  .search-icon {
+    color: #0f7d83;
+    font-size: 1.4rem;
+  }
+
+  .search-field input {
+    width: 100%;
+    min-width: 0;
+    color: #17324d;
+    background: transparent;
+    border: 0;
+    outline: none;
+  }
+
+  .category-field {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .category-field span {
+    color: #60758a;
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .category-field select {
+    min-height: 50px;
+    padding: 0 0.8rem;
     color: #17324d;
     background: #fff;
     border:
       1px solid #cddbe5;
-    border-radius: 10px;
-    font: inherit;
+    border-radius: 11px;
   }
 
-  .books {
+  .books-grid {
     display: grid;
     grid-template-columns:
       repeat(
@@ -783,9 +1084,19 @@
     box-shadow:
       0 18px 48px
       rgb(23 50 77 / 10%);
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
   }
 
-  .cover-wrapper {
+  .book-card:hover {
+    transform: translateY(-6px);
+    box-shadow:
+      0 25px 60px
+      rgb(23 50 77 / 15%);
+  }
+
+  .cover-panel {
     display: flex;
     min-height: 390px;
     padding: 28px;
@@ -818,7 +1129,7 @@
     padding: 1.5rem;
   }
 
-  .labels {
+  .badges {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -833,6 +1144,7 @@
     border-radius: 999px;
     font-size: 0.67rem;
     font-weight: 850;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
@@ -854,28 +1166,37 @@
   .book-card h2 {
     margin:
       1rem 0
-      0.35rem;
+      0.4rem;
     font-size: 1.35rem;
+    line-height: 1.25;
   }
 
-  .author,
-  .purchase-date {
+  .book-author {
+    margin:
+      0 0
+      1rem;
     color: #60758a;
+    font-size: 0.92rem;
     line-height: 1.5;
   }
 
-  .author {
-    margin:
-      0 0
-      0.8rem;
-    font-size: 0.92rem;
+  .book-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.4rem;
+    padding-bottom: 0.8rem;
+    border-bottom:
+      1px solid #edf1f4;
+    font-size: 0.78rem;
   }
 
-  .purchase-date {
-    margin:
-      0 0
-      1.4rem;
-    font-size: 0.86rem;
+  .book-info span {
+    color: #60758a;
+  }
+
+  .book-info strong {
+    text-align: right;
   }
 
   .book-actions {
@@ -890,7 +1211,6 @@
     min-height: 46px;
     padding: 0.75rem;
     border-radius: 10px;
-    font: inherit;
     font-weight: 800;
     cursor: pointer;
   }
@@ -910,18 +1230,18 @@
   }
 
   .read-button:disabled,
-  .download-button:disabled,
-  .logout-button:disabled {
+  .download-button:disabled {
     opacity: 0.65;
     cursor: wait;
   }
 
-  .download-message {
+  .action-message {
     min-height: 20px;
     margin:
       0.75rem 0
       0;
     font-size: 0.82rem;
+    line-height: 1.4;
   }
 
   .success {
@@ -933,19 +1253,33 @@
   }
 
   .general-message,
-  .empty {
+  .empty-state {
     margin-top: 2rem;
-    padding: 2rem;
+    padding: 2.5rem;
     text-align: center;
     background: #fff;
     border:
       1px solid #dfe9ef;
-    border-radius: 18px;
+    border-radius: 20px;
+    box-shadow:
+      0 15px 40px
+      rgb(23 50 77 / 7%);
   }
 
-  @media (max-width: 760px) {
-    .nav {
+  .empty-icon {
+    display: block;
+    margin-bottom: 1rem;
+    font-size: 3rem;
+  }
+
+  @media (max-width: 820px) {
+    .main-nav {
       display: none;
+    }
+
+    .hero {
+      align-items: flex-start;
+      flex-direction: column;
     }
 
     .toolbar {
@@ -954,11 +1288,15 @@
   }
 
   @media (max-width: 650px) {
-    .brand span:last-child {
+    .brand-copy {
       display: none;
     }
 
-    .books {
+    .library-shell {
+      padding-top: 3rem;
+    }
+
+    .books-grid {
       grid-template-columns: 1fr;
     }
 
@@ -966,7 +1304,7 @@
       max-width: 100%;
     }
 
-    .cover-wrapper {
+    .cover-panel {
       min-height: 350px;
     }
 
