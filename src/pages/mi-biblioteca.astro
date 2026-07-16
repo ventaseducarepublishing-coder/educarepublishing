@@ -1,3 +1,11 @@
+---
+/*
+ * Página de biblioteca personal.
+ * Los estilos usan `is:global` porque las tarjetas se crean dinámicamente
+ * con JavaScript mediante innerHTML.
+ */
+---
+
 <!doctype html>
 <html lang="es">
   <head>
@@ -5,6 +13,10 @@
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1"
+    />
+    <meta
+      name="description"
+      content="Biblioteca personal de ebooks adquiridos en Educare Publishing."
     />
     <title>Mi biblioteca | Educare Publishing</title>
   </head>
@@ -56,11 +68,14 @@
         hidden
       >
         <div class="empty-icon">📚</div>
+
         <h2>Aún no tienes ebooks aprobados</h2>
+
         <p>
           Cuando Mercado Pago confirme tu compra,
           el ebook aparecerá automáticamente aquí.
         </p>
+
         <a class="button" href="/#ebooks">
           Explorar ebooks
         </a>
@@ -73,20 +88,26 @@
       const covers = {
         recien_nacido:
           "/portadas/primer-ano-bebe.png",
+
         sopas_caseras:
           "/portadas/sopas-del-mundo.png",
+
         lactancia_materna:
           "/portadas/lactancia-materna.png",
       };
 
       const welcome =
         document.querySelector("#welcome");
+
       const books =
         document.querySelector("#books");
+
       const empty =
         document.querySelector("#empty");
+
       const generalMessage =
         document.querySelector("#general-message");
+
       const logoutButton =
         document.querySelector("#logout");
 
@@ -99,7 +120,9 @@
             error: sessionError,
           } = await supabase.auth.getSession();
 
-          if (sessionError) throw sessionError;
+          if (sessionError) {
+            throw sessionError;
+          }
 
           if (!session) {
             window.location.href = "/login";
@@ -138,14 +161,21 @@
                 ascending: false,
               });
 
-          if (error) throw error;
+          if (error) {
+            throw error;
+          }
 
           if (!data?.length) {
-            if (empty) empty.hidden = false;
+            if (empty) {
+              empty.hidden = false;
+            }
+
             return;
           }
 
-          if (empty) empty.hidden = true;
+          if (empty) {
+            empty.hidden = true;
+          }
 
           renderBooks(
             data,
@@ -280,7 +310,9 @@
             ".download-message"
           );
 
-        if (!productId || !message) return;
+        if (!productId || !message) {
+          return;
+        }
 
         button.disabled = true;
         button.textContent =
@@ -325,6 +357,7 @@
 
           message.textContent =
             "Descarga autorizada. Abriendo ebook…";
+
           message.classList.add("success");
 
           const link =
@@ -393,7 +426,7 @@
   </body>
 </html>
 
-<style>
+<style is:global>
   :root {
     font-family:
       Inter,
