@@ -1,8 +1,7 @@
 ---
 /*
- * Página de biblioteca personal.
- * Los estilos usan `is:global` porque las tarjetas se crean dinámicamente
- * con JavaScript mediante innerHTML.
+ * Biblioteca personal de Educare Publishing.
+ * Las tarjetas se generan con JavaScript, por eso los estilos usan is:global.
  */
 ---
 
@@ -14,40 +13,55 @@
       name="viewport"
       content="width=device-width, initial-scale=1"
     />
-    <meta
-      name="description"
-      content="Biblioteca personal de ebooks adquiridos en Educare Publishing."
-    />
     <title>Mi biblioteca | Educare Publishing</title>
   </head>
 
   <body>
-    <main class="library">
-      <header class="site-header">
+    <header class="topbar">
+      <div class="topbar-inner">
         <a class="brand" href="/">
           <span class="logo">EP</span>
           <span>Educare Publishing</span>
         </a>
 
-        <div class="header-actions">
-          <a class="home-link" href="/">
-            Volver a la tienda
+        <nav class="nav">
+          <a href="/">Inicio</a>
+          <a href="/#ebooks">Ebooks</a>
+          <a class="active" href="/mi-biblioteca">
+            Mi biblioteca
           </a>
+        </nav>
 
-          <button
-            id="logout"
-            class="logout-button"
-            type="button"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-      </header>
+        <button
+          id="logout"
+          class="logout-button"
+          type="button"
+        >
+          Cerrar sesión
+        </button>
+      </div>
+    </header>
 
+    <main class="library">
       <section class="intro">
         <span class="eyebrow">MI CUENTA</span>
         <h1>Mi biblioteca</h1>
         <p id="welcome">Cargando...</p>
+      </section>
+
+      <section class="toolbar">
+        <input
+          id="search"
+          type="search"
+          placeholder="Buscar ebook"
+          autocomplete="off"
+        />
+
+        <select id="category-filter">
+          <option value="all">
+            Todas las categorías
+          </option>
+        </select>
       </section>
 
       <div
@@ -63,20 +77,26 @@
       ></section>
 
       <section
+        id="no-results"
+        class="empty"
+        hidden
+      >
+        <h2>No encontramos resultados</h2>
+        <p>Prueba con otro título o categoría.</p>
+      </section>
+
+      <section
         id="empty"
         class="empty"
         hidden
       >
-        <div class="empty-icon">📚</div>
-
         <h2>Aún no tienes ebooks aprobados</h2>
-
         <p>
           Cuando Mercado Pago confirme tu compra,
-          el ebook aparecerá automáticamente aquí.
+          el ebook aparecerá aquí.
         </p>
 
-        <a class="button" href="/#ebooks">
+        <a class="primary-link" href="/#ebooks">
           Explorar ebooks
         </a>
       </section>
@@ -85,31 +105,45 @@
     <script>
       import { supabase } from "../lib/supabase";
 
-      const covers = {
-        recien_nacido:
-          "/portadas/primer-ano-bebe.png",
+      const catalog = {
+        recien_nacido: {
+          cover: "/portadas/primer-ano-bebe.png",
+          author: "Andrea Carolina Reyes Hernández",
+          category: "Salud y familia",
+        },
 
-        sopas_caseras:
-          "/portadas/sopas-del-mundo.png",
+        sopas_caseras: {
+          cover: "/portadas/sopas-del-mundo.png",
+          author: "Educare Publishing",
+          category: "Cocina",
+        },
 
-        lactancia_materna:
-          "/portadas/lactancia-materna.png",
+        lactancia_materna: {
+          cover: "/portadas/lactancia-materna.png",
+          author: "Andrea Carolina Reyes Hernández",
+          category: "Maternidad",
+        },
       };
 
       const welcome =
         document.querySelector("#welcome");
-
       const books =
         document.querySelector("#books");
-
       const empty =
         document.querySelector("#empty");
-
+      const noResults =
+        document.querySelector("#no-results");
       const generalMessage =
         document.querySelector("#general-message");
-
       const logoutButton =
         document.querySelector("#logout");
+      const searchInput =
+        document.querySelector("#search");
+      const categoryFilter =
+        document.querySelector("#category-filter");
+
+      let purchases = [];
+      let accessToken = "";
 
       iniciarBiblioteca();
 
@@ -128,6 +162,8 @@
             window.location.href = "/login";
             return;
           }
+
+          accessToken = session.access_token;
 
           const displayName =
             session.user.user_metadata?.full_name ||
@@ -148,8 +184,6 @@
                   user_id,
                   product_id,
                   product_title,
-                  amount,
-                  currency,
                   status,
                   approved_at,
                   created_at
@@ -165,22 +199,19 @@
             throw error;
           }
 
-          if (!data?.length) {
+          purchases = Array.isArray(data)
+            ? data
+            : [];
+
+          if (!purchases.length) {
             if (empty) {
               empty.hidden = false;
             }
-
             return;
           }
 
-          if (empty) {
-            empty.hidden = true;
-          }
-
-          renderBooks(
-            data,
-            session.access_token
-          );
+          cargarCategorias();
+          renderFilteredBooks();
         } catch (error) {
           console.error(
             "Error cargando biblioteca:",
@@ -195,23 +226,109 @@
           mostrarMensajeGeneral(
             error instanceof Error
               ? error.message
-              : "Ocurrió un error inesperado.",
-            "error"
+              : "Ocurrió un error inesperado."
           );
         }
       }
 
-      function renderBooks(
-        purchases,
-        accessToken
-      ) {
+      function cargarCategorias() {
+        if (!categoryFilter) return;
+
+        const categories = [
+          ...new Set(
+            purchases.map((purchase) => {
+              return (
+                catalog[purchase.product_id]
+                  ?.category ||
+                "General"
+              );
+            })
+          ),
+        ];
+
+        categoryFilter.innerHTML =
+          `<option value="all">Todas las categorías</option>` +
+          categories
+            .map((category) => {
+              return `
+                <option value="${escapeHtml(category)}">
+                  ${escapeHtml(category)}
+                </option>
+              `;
+            })
+            .join("");
+      }
+
+      function renderFilteredBooks() {
+        const query =
+          searchInput?.value
+            .trim()
+            .toLocaleLowerCase("es") || "";
+
+        const selectedCategory =
+          categoryFilter?.value || "all";
+
+        const filtered =
+          purchases.filter((purchase) => {
+            const metadata =
+              catalog[purchase.product_id] ||
+              {};
+
+            const title =
+              String(
+                purchase.product_title || ""
+              ).toLocaleLowerCase("es");
+
+            const category =
+              String(
+                metadata.category || "General"
+              );
+
+            const matchesSearch =
+              !query ||
+              title.includes(query) ||
+              category
+                .toLocaleLowerCase("es")
+                .includes(query);
+
+            const matchesCategory =
+              selectedCategory === "all" ||
+              category === selectedCategory;
+
+            return (
+              matchesSearch &&
+              matchesCategory
+            );
+          });
+
+        if (noResults) {
+          noResults.hidden =
+            filtered.length > 0;
+        }
+
+        renderBooks(filtered);
+      }
+
+      function renderBooks(items) {
         if (!books) return;
 
-        books.innerHTML = purchases
+        books.innerHTML = items
           .map((purchase) => {
+            const metadata =
+              catalog[purchase.product_id] ||
+              {};
+
             const cover =
-              covers[purchase.product_id] ||
+              metadata.cover ||
               "/favicon.svg";
+
+            const author =
+              metadata.author ||
+              "Educare Publishing";
+
+            const category =
+              metadata.category ||
+              "General";
 
             const purchaseDate =
               purchase.approved_at ||
@@ -240,14 +357,19 @@
                     alt="Portada de ${escapeHtml(
                       purchase.product_title
                     )}"
-                    loading="lazy"
                   />
                 </div>
 
                 <div class="book-content">
-                  <span class="status-badge">
-                    Compra aprobada
-                  </span>
+                  <div class="labels">
+                    <span class="status-badge">
+                      Compra aprobada
+                    </span>
+
+                    <span class="category-badge">
+                      ${escapeHtml(category)}
+                    </span>
+                  </div>
 
                   <h2>
                     ${escapeHtml(
@@ -255,20 +377,36 @@
                     )}
                   </h2>
 
+                  <p class="author">
+                    ${escapeHtml(author)}
+                  </p>
+
                   <p class="purchase-date">
                     Disponible desde
                     ${escapeHtml(formattedDate)}
                   </p>
 
-                  <button
-                    class="download-button"
-                    type="button"
-                    data-product-id="${escapeHtml(
-                      purchase.product_id
-                    )}"
-                  >
-                    Descargar ebook
-                  </button>
+                  <div class="book-actions">
+                    <button
+                      class="read-button"
+                      type="button"
+                      data-product-id="${escapeHtml(
+                        purchase.product_id
+                      )}"
+                    >
+                      Leer online
+                    </button>
+
+                    <button
+                      class="download-button"
+                      type="button"
+                      data-product-id="${escapeHtml(
+                        purchase.product_id
+                      )}"
+                    >
+                      Descargar PDF
+                    </button>
+                  </div>
 
                   <p
                     class="download-message"
@@ -280,24 +418,42 @@
           })
           .join("");
 
+        conectarBotones();
+      }
+
+      function conectarBotones() {
+        document
+          .querySelectorAll(".read-button")
+          .forEach((button) => {
+            button.addEventListener(
+              "click",
+              async () => {
+                await abrirEbook(
+                  button,
+                  false
+                );
+              }
+            );
+          });
+
         document
           .querySelectorAll(".download-button")
           .forEach((button) => {
             button.addEventListener(
               "click",
               async () => {
-                await descargarEbook(
+                await abrirEbook(
                   button,
-                  accessToken
+                  true
                 );
               }
             );
           });
       }
 
-      async function descargarEbook(
+      async function abrirEbook(
         button,
-        accessToken
+        forceDownload
       ) {
         const productId =
           button.dataset.productId || "";
@@ -314,9 +470,14 @@
           return;
         }
 
+        const originalText =
+          button.textContent;
+
         button.disabled = true;
         button.textContent =
-          "Preparando descarga...";
+          forceDownload
+            ? "Preparando descarga..."
+            : "Abriendo...";
 
         message.textContent = "";
         message.className =
@@ -345,20 +506,15 @@
           if (!response.ok) {
             throw new Error(
               result.error ||
-              "No fue posible descargar el ebook."
+              "No fue posible abrir el ebook."
             );
           }
 
           if (!result.url) {
             throw new Error(
-              "El servidor no entregó el enlace de descarga."
+              "El servidor no entregó el enlace del ebook."
             );
           }
-
-          message.textContent =
-            "Descarga autorizada. Abriendo ebook…";
-
-          message.classList.add("success");
 
           const link =
             document.createElement("a");
@@ -368,27 +524,48 @@
           link.rel =
             "noopener noreferrer";
 
+          if (forceDownload) {
+            link.download = "";
+          }
+
           document.body.appendChild(link);
           link.click();
           link.remove();
+
+          message.textContent =
+            forceDownload
+              ? "Descarga autorizada."
+              : "Ebook abierto en una nueva pestaña.";
+
+          message.classList.add("success");
         } catch (error) {
           console.error(
-            "Error descargando ebook:",
+            "Error abriendo ebook:",
             error
           );
 
           message.textContent =
             error instanceof Error
               ? error.message
-              : "No fue posible descargar el ebook.";
+              : "No fue posible abrir el ebook.";
 
           message.classList.add("error");
         } finally {
           button.disabled = false;
           button.textContent =
-            "Descargar ebook";
+            originalText;
         }
       }
+
+      searchInput?.addEventListener(
+        "input",
+        renderFilteredBooks
+      );
+
+      categoryFilter?.addEventListener(
+        "change",
+        renderFilteredBooks
+      );
 
       logoutButton?.addEventListener(
         "click",
@@ -398,20 +575,18 @@
             "Cerrando sesión...";
 
           await supabase.auth.signOut();
+
           window.location.href = "/";
         }
       );
 
-      function mostrarMensajeGeneral(
-        text,
-        type
-      ) {
+      function mostrarMensajeGeneral(text) {
         if (!generalMessage) return;
 
         generalMessage.hidden = false;
         generalMessage.textContent = text;
         generalMessage.className =
-          `general-message ${type}`;
+          "general-message error";
       }
 
       function escapeHtml(value) {
@@ -451,18 +626,25 @@
       );
   }
 
-  .library {
-    width: min(1180px, 92%);
-    margin: 0 auto;
-    padding: 2rem 0 5rem;
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background:
+      rgb(255 255 255 / 94%);
+    border-bottom:
+      1px solid #dfe9ef;
+    backdrop-filter: blur(14px);
   }
 
-  .site-header {
+  .topbar-inner {
     display: flex;
-    justify-content: space-between;
+    width: min(1180px, 92%);
+    min-height: 74px;
+    margin: auto;
     align-items: center;
+    justify-content: space-between;
     gap: 2rem;
-    margin-bottom: 4rem;
   }
 
   .brand {
@@ -476,8 +658,8 @@
 
   .logo {
     display: grid;
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
     place-items: center;
     color: #fff;
     background:
@@ -486,51 +668,46 @@
         #0f7d83,
         #17324d
       );
-    border-radius: 13px;
+    border-radius: 12px;
   }
 
-  .header-actions {
+  .nav {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    gap: 1.4rem;
   }
 
-  .home-link {
-    color: #17324d;
-    font-weight: 750;
+  .nav a {
+    color: #51687d;
+    font-weight: 700;
     text-decoration: none;
   }
 
-  button,
-  .button {
+  .nav a.active,
+  .nav a:hover {
+    color: #0f7d83;
+  }
+
+  .logout-button,
+  .primary-link {
     display: inline-flex;
+    min-height: 44px;
+    padding: 0.75rem 1rem;
     align-items: center;
     justify-content: center;
-    min-height: 48px;
-    padding: 0.85rem 1.1rem;
     color: #fff;
     background: #17324d;
     border: 0;
-    border-radius: 11px;
+    border-radius: 10px;
     font: inherit;
     font-weight: 800;
     text-decoration: none;
     cursor: pointer;
   }
 
-  button:hover,
-  .button:hover {
-    transform: translateY(-1px);
-  }
-
-  button:disabled {
-    opacity: 0.65;
-    cursor: wait;
-    transform: none;
-  }
-
-  .intro {
-    max-width: 780px;
+  .library {
+    width: min(1180px, 92%);
+    margin: auto;
+    padding: 4rem 0 6rem;
   }
 
   .eyebrow {
@@ -549,9 +726,36 @@
   }
 
   #welcome {
+    margin: 0;
     color: #60758a;
     font-size: 1.05rem;
     line-height: 1.7;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns:
+      1fr
+      minmax(220px, 280px);
+    gap: 1rem;
+    margin-top: 3rem;
+    padding: 1rem;
+    background: #fff;
+    border:
+      1px solid #dfe9ef;
+    border-radius: 16px;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    min-height: 48px;
+    padding: 0 1rem;
+    color: #17324d;
+    background: #fff;
+    border:
+      1px solid #cddbe5;
+    border-radius: 10px;
+    font: inherit;
   }
 
   .books {
@@ -563,7 +767,7 @@
       );
     justify-content: center;
     gap: 2rem;
-    margin-top: 3rem;
+    margin-top: 2rem;
   }
 
   .book-card {
@@ -573,29 +777,20 @@
     flex-direction: column;
     overflow: hidden;
     background: #fff;
-    border: 1px solid #dfe9ef;
-    border-radius: 20px;
+    border:
+      1px solid #dfe9ef;
+    border-radius: 22px;
     box-shadow:
-      0 14px 38px
+      0 18px 48px
       rgb(23 50 77 / 10%);
-    transition:
-      transform 0.25s ease,
-      box-shadow 0.25s ease;
-  }
-
-  .book-card:hover {
-    transform: translateY(-5px);
-    box-shadow:
-      0 20px 48px
-      rgb(23 50 77 / 14%);
   }
 
   .cover-wrapper {
     display: flex;
-    justify-content: center;
-    align-items: center;
     min-height: 390px;
     padding: 28px;
+    align-items: center;
+    justify-content: center;
     background:
       linear-gradient(
         135deg,
@@ -612,113 +807,155 @@
     object-fit: contain;
     border-radius: 8px;
     box-shadow:
-      0 12px 30px
-      rgb(23 50 77 / 18%);
+      0 14px 34px
+      rgb(23 50 77 / 20%);
   }
 
   .book-content {
     display: flex;
     flex: 1;
     flex-direction: column;
-    align-items: flex-start;
     padding: 1.5rem;
   }
 
-  .status-badge {
+  .labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .status-badge,
+  .category-badge {
     display: inline-flex;
-    align-items: center;
     padding:
-      0.4rem
-      0.65rem;
-    color: #08765c;
-    background: #eaf8f2;
+      0.38rem
+      0.6rem;
     border-radius: 999px;
-    font-size: 0.72rem;
+    font-size: 0.67rem;
     font-weight: 850;
-    letter-spacing: 0.05em;
     text-transform: uppercase;
   }
 
+  .status-badge {
+    color: #08765c;
+    background: #eaf8f2;
+  }
+
   .status-badge::before {
+    margin-right: 0.3rem;
     content: "✓";
-    margin-right: 0.35rem;
+  }
+
+  .category-badge {
+    color: #3f6072;
+    background: #eef3f6;
   }
 
   .book-card h2 {
     margin:
       1rem 0
-      0.55rem;
+      0.35rem;
     font-size: 1.35rem;
-    line-height: 1.25;
+  }
+
+  .author,
+  .purchase-date {
+    color: #60758a;
+    line-height: 1.5;
+  }
+
+  .author {
+    margin:
+      0 0
+      0.8rem;
+    font-size: 0.92rem;
   }
 
   .purchase-date {
     margin:
       0 0
-      1.5rem;
-    color: #60758a;
-    line-height: 1.6;
+      1.4rem;
+    font-size: 0.86rem;
+  }
+
+  .book-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    margin-top: auto;
+  }
+
+  .read-button,
+  .download-button {
+    min-height: 46px;
+    padding: 0.75rem;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .read-button {
+    color: #0f7d83;
+    background: #edf8f7;
+    border:
+      1px solid #b8ddda;
   }
 
   .download-button {
-    width: 100%;
-    margin-top: auto;
+    color: #fff;
     background: #0f7d83;
+    border:
+      1px solid #0f7d83;
+  }
+
+  .read-button:disabled,
+  .download-button:disabled,
+  .logout-button:disabled {
+    opacity: 0.65;
+    cursor: wait;
   }
 
   .download-message {
-    min-height: 22px;
+    min-height: 20px;
     margin:
-      0.8rem 0
+      0.75rem 0
       0;
-    font-size: 0.9rem;
-    line-height: 1.4;
+    font-size: 0.82rem;
   }
 
-  .download-message.success,
-  .general-message.success {
+  .success {
     color: #08765c;
   }
 
-  .download-message.error,
-  .general-message.error {
+  .error {
     color: #b02a37;
   }
 
-  .general-message {
-    margin-top: 2rem;
-    padding: 1rem;
-    background: #fff;
-    border: 1px solid #dfe9ef;
-    border-radius: 12px;
-  }
-
+  .general-message,
   .empty {
-    margin-top: 3rem;
-    padding: 3rem 2rem;
+    margin-top: 2rem;
+    padding: 2rem;
     text-align: center;
     background: #fff;
-    border: 1px solid #dfe9ef;
-    border-radius: 22px;
-    box-shadow:
-      0 20px 55px
-      rgb(23 50 77 / 8%);
+    border:
+      1px solid #dfe9ef;
+    border-radius: 18px;
   }
 
-  .empty-icon {
-    font-size: 3.4rem;
+  @media (max-width: 760px) {
+    .nav {
+      display: none;
+    }
+
+    .toolbar {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 650px) {
-    .site-header {
-      align-items: flex-start;
-      flex-direction: column;
-      margin-bottom: 3rem;
-    }
-
-    .header-actions {
-      width: 100%;
-      justify-content: space-between;
+    .brand span:last-child {
+      display: none;
     }
 
     .books {
@@ -736,6 +973,10 @@
     .book-cover {
       max-width: 200px;
       height: 300px;
+    }
+
+    .book-actions {
+      grid-template-columns: 1fr;
     }
   }
 </style>
