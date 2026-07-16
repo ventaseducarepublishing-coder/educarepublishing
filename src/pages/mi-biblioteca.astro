@@ -2,12 +2,10 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1"
     />
-
     <title>Mi biblioteca | Educare Publishing</title>
   </head>
 
@@ -16,10 +14,7 @@
       <header class="site-header">
         <a class="brand" href="/">
           <span class="logo">EP</span>
-
-          <span>
-            Educare Publishing
-          </span>
+          <span>Educare Publishing</span>
         </a>
 
         <div class="header-actions">
@@ -38,15 +33,9 @@
       </header>
 
       <section class="intro">
-        <span class="eyebrow">
-          MI CUENTA
-        </span>
-
+        <span class="eyebrow">MI CUENTA</span>
         <h1>Mi biblioteca</h1>
-
-        <p id="welcome">
-          Cargando...
-        </p>
+        <p id="welcome">Cargando...</p>
       </section>
 
       <div
@@ -67,20 +56,12 @@
         hidden
       >
         <div class="empty-icon">📚</div>
-
-        <h2>
-          Aún no tienes ebooks aprobados
-        </h2>
-
+        <h2>Aún no tienes ebooks aprobados</h2>
         <p>
           Cuando Mercado Pago confirme tu compra,
           el ebook aparecerá automáticamente aquí.
         </p>
-
-        <a
-          class="button"
-          href="/#ebooks"
-        >
+        <a class="button" href="/#ebooks">
           Explorar ebooks
         </a>
       </section>
@@ -92,26 +73,20 @@
       const covers = {
         recien_nacido:
           "/portadas/primer-ano-bebe.png",
-
         sopas_caseras:
           "/portadas/sopas-del-mundo.png",
-
         lactancia_materna:
           "/portadas/lactancia-materna.png",
       };
 
       const welcome =
         document.querySelector("#welcome");
-
       const books =
         document.querySelector("#books");
-
       const empty =
         document.querySelector("#empty");
-
       const generalMessage =
         document.querySelector("#general-message");
-
       const logoutButton =
         document.querySelector("#logout");
 
@@ -124,9 +99,7 @@
             error: sessionError,
           } = await supabase.auth.getSession();
 
-          if (sessionError) {
-            throw sessionError;
-          }
+          if (sessionError) throw sessionError;
 
           if (!session) {
             window.location.href = "/login";
@@ -159,36 +132,20 @@
                   created_at
                 `
               )
-              .eq(
-                "user_id",
-                session.user.id
-              )
-              .eq(
-                "status",
-                "approved"
-              )
-              .order(
-                "created_at",
-                {
-                  ascending: false,
-                }
-              );
+              .eq("user_id", session.user.id)
+              .eq("status", "approved")
+              .order("created_at", {
+                ascending: false,
+              });
 
-          if (error) {
-            throw error;
-          }
+          if (error) throw error;
 
           if (!data?.length) {
-            if (empty) {
-              empty.hidden = false;
-            }
-
+            if (empty) empty.hidden = false;
             return;
           }
 
-          if (empty) {
-            empty.hidden = true;
-          }
+          if (empty) empty.hidden = true;
 
           renderBooks(
             data,
@@ -294,9 +251,7 @@
           .join("");
 
         document
-          .querySelectorAll(
-            ".download-button"
-          )
+          .querySelectorAll(".download-button")
           .forEach((button) => {
             button.addEventListener(
               "click",
@@ -325,9 +280,7 @@
             ".download-message"
           );
 
-        if (!productId || !message) {
-          return;
-        }
+        if (!productId || !message) return;
 
         button.disabled = true;
         button.textContent =
@@ -342,15 +295,12 @@
             "/api/download",
             {
               method: "POST",
-
               headers: {
                 "Content-Type":
                   "application/json",
-
                 Authorization:
                   `Bearer ${accessToken}`,
               },
-
               body: JSON.stringify({
                 productId,
               }),
@@ -375,10 +325,7 @@
 
           message.textContent =
             "Descarga autorizada. Abriendo ebook…";
-
-          message.classList.add(
-            "success"
-          );
+          message.classList.add("success");
 
           const link =
             document.createElement("a");
@@ -418,7 +365,6 @@
             "Cerrando sesión...";
 
           await supabase.auth.signOut();
-
           window.location.href = "/";
         }
       );
@@ -453,7 +399,6 @@
       Inter,
       system-ui,
       sans-serif;
-
     color: #17324d;
     background: #f4f8fa;
   }
@@ -465,7 +410,6 @@
   body {
     margin: 0;
     min-height: 100vh;
-
     background:
       linear-gradient(
         135deg,
@@ -476,7 +420,7 @@
 
   .library {
     width: min(1180px, 92%);
-    margin: auto;
+    margin: 0 auto;
     padding: 2rem 0 5rem;
   }
 
@@ -485,14 +429,13 @@
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
-    margin-bottom: 5rem;
+    margin-bottom: 4rem;
   }
 
   .brand {
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-
     color: inherit;
     font-weight: 800;
     text-decoration: none;
@@ -503,7 +446,6 @@
     width: 46px;
     height: 46px;
     place-items: center;
-
     color: #fff;
     background:
       linear-gradient(
@@ -511,7 +453,6 @@
         #0f7d83,
         #17324d
       );
-
     border-radius: 13px;
   }
 
@@ -532,20 +473,15 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     min-height: 48px;
     padding: 0.85rem 1.1rem;
-
     color: #fff;
     background: #17324d;
-
     border: 0;
     border-radius: 11px;
-
     font: inherit;
     font-weight: 800;
     text-decoration: none;
-
     cursor: pointer;
   }
 
@@ -573,9 +509,8 @@
 
   h1 {
     margin: 1rem 0;
-
     font:
-      clamp(3.2rem, 7vw, 5.4rem) / 1
+      clamp(3rem, 7vw, 5rem) / 1
       Georgia,
       serif;
   }
@@ -604,15 +539,12 @@
     max-width: 320px;
     flex-direction: column;
     overflow: hidden;
-
     background: #fff;
     border: 1px solid #dfe9ef;
     border-radius: 20px;
-
     box-shadow:
       0 14px 38px
       rgb(23 50 77 / 10%);
-
     transition:
       transform 0.25s ease,
       box-shadow 0.25s ease;
@@ -620,7 +552,6 @@
 
   .book-card:hover {
     transform: translateY(-5px);
-
     box-shadow:
       0 20px 48px
       rgb(23 50 77 / 14%);
@@ -630,10 +561,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-
     min-height: 390px;
     padding: 28px;
-
     background:
       linear-gradient(
         135deg,
@@ -648,9 +577,7 @@
     max-width: 220px;
     height: 330px;
     object-fit: contain;
-
     border-radius: 8px;
-
     box-shadow:
       0 12px 30px
       rgb(23 50 77 / 18%);
@@ -661,23 +588,18 @@
     flex: 1;
     flex-direction: column;
     align-items: flex-start;
-
-    padding: 1.6rem;
+    padding: 1.5rem;
   }
 
   .status-badge {
     display: inline-flex;
     align-items: center;
-
     padding:
       0.4rem
       0.65rem;
-
     color: #08765c;
     background: #eaf8f2;
-
     border-radius: 999px;
-
     font-size: 0.72rem;
     font-weight: 850;
     letter-spacing: 0.05em;
@@ -693,7 +615,6 @@
     margin:
       1rem 0
       0.55rem;
-
     font-size: 1.35rem;
     line-height: 1.25;
   }
@@ -702,7 +623,6 @@
     margin:
       0 0
       1.5rem;
-
     color: #60758a;
     line-height: 1.6;
   }
@@ -715,11 +635,9 @@
 
   .download-message {
     min-height: 22px;
-
     margin:
       0.8rem 0
       0;
-
     font-size: 0.9rem;
     line-height: 1.4;
   }
@@ -737,29 +655,18 @@
   .general-message {
     margin-top: 2rem;
     padding: 1rem;
-
     background: #fff;
-
-    border:
-      1px solid
-      #dfe9ef;
-
+    border: 1px solid #dfe9ef;
     border-radius: 12px;
   }
 
   .empty {
     margin-top: 3rem;
     padding: 3rem 2rem;
-
     text-align: center;
     background: #fff;
-
-    border:
-      1px solid
-      #dfe9ef;
-
+    border: 1px solid #dfe9ef;
     border-radius: 22px;
-
     box-shadow:
       0 20px 55px
       rgb(23 50 77 / 8%);
@@ -790,12 +697,12 @@
     }
 
     .cover-wrapper {
-      min-height: 360px;
+      min-height: 350px;
     }
 
     .book-cover {
-      max-width: 205px;
-      height: 310px;
+      max-width: 200px;
+      height: 300px;
     }
   }
 </style>
