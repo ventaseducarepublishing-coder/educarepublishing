@@ -1,0 +1,1793 @@
+---
+const product = {
+  id: "recien_nacido",
+  title: "Guía Completa del Primer Año del Bebé",
+  shortTitle: "Primer Año del Bebé",
+  subtitle:
+    "Una guía práctica y cercana para acompañar el crecimiento, los cuidados y el desarrollo del bebé durante sus primeros doce meses.",
+  price: 50000,
+  priceLabel: "$50.000",
+  cover: "/portadas/primer-ano-bebe.png",
+  author: "Andrea Carolina Reyes Hernández",
+  category: "Salud y familia",
+  format: "PDF digital",
+  access: "Acceso inmediato",
+  pages: "Guía ilustrada",
+  language: "Español",
+};
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Book",
+  name: product.title,
+  author: {
+    "@type": "Person",
+    name: product.author,
+  },
+  bookFormat: "https://schema.org/EBook",
+  inLanguage: "es",
+  image: `https://educarepublishing.cl${product.cover}`,
+  description: product.subtitle,
+  offers: {
+    "@type": "Offer",
+    priceCurrency: "CLP",
+    price: product.price,
+    availability: "https://schema.org/InStock",
+    url: "https://educarepublishing.cl/ebook/primer-ano-bebe/",
+  },
+};
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <meta
+      name="description"
+      content="Guía Completa del Primer Año del Bebé: cuidados, alimentación, sueño, desarrollo, seguridad y señales de alerta durante los primeros doce meses."
+    />
+
+    <meta
+      property="og:title"
+      content="Guía Completa del Primer Año del Bebé | Educare Publishing"
+    />
+
+    <meta
+      property="og:description"
+      content={product.subtitle}
+    />
+
+    <meta
+      property="og:image"
+      content={`https://educarepublishing.cl${product.cover}`}
+    />
+
+    <meta
+      property="og:type"
+      content="product"
+    />
+
+    <meta
+      property="og:url"
+      content="https://educarepublishing.cl/ebook/primer-ano-bebe/"
+    />
+
+    <link
+      rel="canonical"
+      href="https://educarepublishing.cl/ebook/primer-ano-bebe/"
+    />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(schema)}
+    ></script>
+
+    <title>
+      Guía Completa del Primer Año del Bebé | Educare Publishing
+    </title>
+  </head>
+
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="/">
+          <span class="logo">EP</span>
+
+          <span class="brand-copy">
+            <strong>Educare</strong>
+            <small>Publishing</small>
+          </span>
+        </a>
+
+        <nav
+          class="main-nav"
+          aria-label="Navegación principal"
+        >
+          <a href="/">Inicio</a>
+          <a href="/#ebooks">Ebooks</a>
+          <a href="#beneficios">Beneficios</a>
+          <a href="#contenido">Contenido</a>
+          <a href="#preguntas">Preguntas</a>
+        </nav>
+
+        <div class="header-actions">
+          <a
+            class="library-link"
+            href="/mi-biblioteca"
+          >
+            Mi biblioteca
+          </a>
+
+          <button
+            class="header-buy"
+            type="button"
+            data-buy
+          >
+            Comprar
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="hero-badges">
+            <span class="category-badge">
+              {product.category}
+            </span>
+
+            <span class="digital-badge">
+              Ebook digital
+            </span>
+          </div>
+
+          <h1>{product.title}</h1>
+
+          <p class="hero-subtitle">
+            {product.subtitle}
+          </p>
+
+          <div class="author-row">
+            <div class="author-avatar">
+              AR
+            </div>
+
+            <div>
+              <span>Autora</span>
+              <strong>{product.author}</strong>
+            </div>
+          </div>
+
+          <ul class="hero-checks">
+            <li>Información clara y fácil de consultar.</li>
+            <li>Acceso seguro desde tu biblioteca personal.</li>
+            <li>Lectura online y descarga protegida en PDF.</li>
+          </ul>
+
+          <div class="purchase-card">
+            <div class="purchase-price">
+              <small>Precio del ebook</small>
+              <strong>{product.priceLabel}</strong>
+              <span>Pago único · Sin suscripción</span>
+            </div>
+
+            <button
+              class="primary-buy"
+              type="button"
+              data-buy
+            >
+              Comprar ahora
+            </button>
+          </div>
+
+          <div class="payment-note">
+            <span aria-hidden="true">🔒</span>
+            <p>
+              Compra segura con Mercado Pago. Cuando el pago sea aprobado,
+              el ebook aparecerá automáticamente en “Mi biblioteca”.
+            </p>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="visual-glow"></div>
+
+          <div class="cover-card">
+            <img
+              src={product.cover}
+              alt={`Portada del ebook ${product.title}`}
+            />
+          </div>
+
+          <div class="floating-info info-top">
+            <strong>{product.pages}</strong>
+            <span>Contenido ilustrado</span>
+          </div>
+
+          <div class="floating-info info-bottom">
+            <strong>{product.access}</strong>
+            <span>Después del pago</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="trust-bar">
+        <article>
+          <span class="trust-icon">🔒</span>
+          <div>
+            <strong>Pago protegido</strong>
+            <p>Procesado de forma segura por Mercado Pago.</p>
+          </div>
+        </article>
+
+        <article>
+          <span class="trust-icon">📚</span>
+          <div>
+            <strong>Biblioteca personal</strong>
+            <p>Tu compra queda asociada a tu cuenta.</p>
+          </div>
+        </article>
+
+        <article>
+          <span class="trust-icon">📱</span>
+          <div>
+            <strong>Acceso multidispositivo</strong>
+            <p>Lee desde computador, tablet o teléfono.</p>
+          </div>
+        </article>
+
+        <article>
+          <span class="trust-icon">⬇️</span>
+          <div>
+            <strong>Descarga disponible</strong>
+            <p>Guarda el PDF desde tu biblioteca.</p>
+          </div>
+        </article>
+      </section>
+
+      <section
+        id="beneficios"
+        class="section benefits-section"
+      >
+        <div class="section-heading">
+          <span class="eyebrow">
+            UNA GUÍA PARA ACOMPAÑARTE
+          </span>
+
+          <h2>
+            Información práctica para acompañar el primer año del bebé
+          </h2>
+
+          <p>
+            Un recurso organizado, visual y cercano para consultar en cada
+            etapa, comprender lo que ocurre y abordar dudas frecuentes.
+          </p>
+        </div>
+
+        <div class="benefits-grid">
+          <article>
+            <span>🤱</span>
+            <h3>Cuidados diarios</h3>
+            <p>
+              Calostro, subida de la leche, frecuencia de las tomas y señales
+              de alimentación efectiva.
+            </p>
+          </article>
+
+          <article>
+            <span>🫶</span>
+            <h3>Alimentación</h3>
+            <p>
+              Cómo reconocer un buen acople y adaptar distintas posiciones
+              para amamantar con mayor comodidad.
+            </p>
+          </article>
+
+          <article>
+            <span>🍼</span>
+            <h3>Sueño seguro</h3>
+            <p>
+              Extracción manual, uso de bombas y manejo seguro de la leche
+              materna.
+            </p>
+          </article>
+
+          <article>
+            <span>🌿</span>
+            <h3>Desarrollo mes a mes</h3>
+            <p>
+              Orientación frente a grietas, congestión, mastitis y dolor
+              durante la lactancia.
+            </p>
+          </article>
+
+          <article>
+            <span>💼</span>
+            <h3>Salud y controles</h3>
+            <p>
+              Organización de la extracción y conservación para mantener la
+              lactancia al retomar las actividades.
+            </p>
+          </article>
+
+          <article>
+            <span>🌙</span>
+            <h3>Prevención de accidentes</h3>
+            <p>
+              Claves para transitar el destete de manera gradual, sensible y
+              respetuosa.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section
+        id="contenido"
+        class="section content-section"
+      >
+        <div class="content-layout">
+          <div class="content-copy">
+            <span class="eyebrow light">
+              CONTENIDO DEL EBOOK
+            </span>
+
+            <h2>
+              Respuestas claras para situaciones reales
+            </h2>
+
+            <p>
+              Más de 100 páginas de contenido visual y educativo sobre los
+              aspectos esenciales de la lactancia materna.
+            </p>
+
+            <div class="content-columns">
+              <ul>
+                <li>Cuidados del recién nacido.</li>
+                <li>Alimentación durante el primer año.</li>
+                <li>Sueño seguro y rutinas.</li>
+                <li>Desarrollo mes a mes.</li>
+                <li>Estimulación temprana.</li>
+                <li>Controles de salud y vacunas.</li>
+              </ul>
+
+              <ul>
+                <li>Prevención de accidentes.</li>
+                <li>Primeros auxilios básicos.</li>
+                <li>Dentición y salud bucal.</li>
+                <li>Fiebre y señales de alerta.</li>
+                <li>Salud y controles.</li>
+                <li>Paso hacia el segundo año.</li>
+              </ul>
+            </div>
+          </div>
+
+          <aside class="product-summary">
+            <span class="summary-title">
+              FICHA DEL EBOOK
+            </span>
+
+            <dl>
+              <div>
+                <dt>Autora</dt>
+                <dd>{product.author}</dd>
+              </div>
+
+              <div>
+                <dt>Formato</dt>
+                <dd>{product.format}</dd>
+              </div>
+
+              <div>
+                <dt>Extensión</dt>
+                <dd>{product.pages}</dd>
+              </div>
+
+              <div>
+                <dt>Idioma</dt>
+                <dd>{product.language}</dd>
+              </div>
+
+              <div>
+                <dt>Acceso</dt>
+                <dd>{product.access}</dd>
+              </div>
+
+              <div>
+                <dt>Editorial</dt>
+                <dd>Educare Publishing</dd>
+              </div>
+            </dl>
+
+            <button
+              class="primary-buy summary-buy"
+              type="button"
+              data-buy
+            >
+              Comprar por {product.priceLabel}
+            </button>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section process-section">
+        <div class="section-heading centered">
+          <span class="eyebrow">
+            COMPRA SIMPLE Y SEGURA
+          </span>
+
+          <h2>
+            Obtén tu ebook en tres pasos
+          </h2>
+        </div>
+
+        <div class="steps-grid">
+          <article>
+            <span>01</span>
+            <h3>Crea o ingresa a tu cuenta</h3>
+            <p>
+              Tu cuenta permite asociar la compra y proteger el acceso al
+              archivo.
+            </p>
+          </article>
+
+          <article>
+            <span>02</span>
+            <h3>Realiza el pago</h3>
+            <p>
+              Mercado Pago procesa la operación y comunica su estado de forma
+              automática.
+            </p>
+          </article>
+
+          <article>
+            <span>03</span>
+            <h3>Accede a tu biblioteca</h3>
+            <p>
+              Cuando el pago sea aprobado podrás leer online o descargar el
+              PDF.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section audience-section">
+        <div class="section-heading centered">
+          <span class="eyebrow">
+            ¿PARA QUIÉN ES?
+          </span>
+
+          <h2>
+            Creada para acompañar distintas experiencias
+          </h2>
+        </div>
+
+        <div class="audience-grid">
+          <article>
+            <span>01</span>
+            <h3>Futuras madres</h3>
+            <p>
+              Para comprender cómo funciona la lactancia antes del nacimiento.
+            </p>
+          </article>
+
+          <article>
+            <span>02</span>
+            <h3>Madres en lactancia</h3>
+            <p>
+              Para resolver dudas y enfrentar dificultades con mayor
+              seguridad.
+            </p>
+          </article>
+
+          <article>
+            <span>03</span>
+            <h3>Familias y cuidadores</h3>
+            <p>
+              Para comprender cómo brindar apoyo práctico y emocional.
+            </p>
+          </article>
+
+          <article>
+            <span>04</span>
+            <h3>Estudiantes y profesionales</h3>
+            <p>
+              Como recurso educativo complementario en salud materna.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section
+        id="preguntas"
+        class="section faq-section"
+      >
+        <div class="faq-layout">
+          <div class="faq-intro">
+            <span class="eyebrow">
+              PREGUNTAS FRECUENTES
+            </span>
+
+            <h2>
+              Todo lo que necesitas saber antes de comprar
+            </h2>
+
+            <p>
+              La compra es digital, segura y queda asociada a tu cuenta de
+              Educare Publishing.
+            </p>
+          </div>
+
+          <div class="faq-list">
+            <details open>
+              <summary>
+                ¿Cómo recibo el ebook después de comprar?
+              </summary>
+
+              <p>
+                Cuando Mercado Pago aprueba la operación, el ebook aparece
+                automáticamente en “Mi biblioteca”.
+              </p>
+            </details>
+
+            <details>
+              <summary>
+                ¿Puedo leerlo desde el computador y el celular?
+              </summary>
+
+              <p>
+                Sí. Puedes ingresar desde distintos dispositivos, leer online o
+                descargar el PDF.
+              </p>
+            </details>
+
+            <details>
+              <summary>
+                ¿La descarga es inmediata?
+              </summary>
+
+              <p>
+                Queda disponible cuando Mercado Pago confirma que la operación
+                fue aprobada.
+              </p>
+            </details>
+
+            <details>
+              <summary>
+                ¿Necesito crear una cuenta?
+              </summary>
+
+              <p>
+                Sí. La cuenta permite vincular la compra a tu biblioteca y
+                proteger el acceso.
+              </p>
+            </details>
+
+            <details>
+              <summary>
+                ¿Es un libro físico?
+              </summary>
+
+              <p>
+                No. Es un ebook digital en formato PDF.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-cta">
+        <div>
+          <span class="eyebrow light">
+            EMPIEZA HOY
+          </span>
+
+          <h2>
+            Acompaña el primer año del bebé con más información y tranquilidad
+          </h2>
+
+          <p>
+            Accede a una guía práctica creada para acompañar los cuidados, el crecimiento y el desarrollo durante los primeros doce meses.
+          </p>
+        </div>
+
+        <div class="final-purchase">
+          <strong>{product.priceLabel}</strong>
+
+          <button
+            class="final-buy"
+            type="button"
+            data-buy
+          >
+            Comprar Primer Año del Bebé
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand" href="/">
+        <span class="logo">EP</span>
+
+        <span class="brand-copy">
+          <strong>Educare</strong>
+          <small>Publishing</small>
+        </span>
+      </a>
+
+      <p>
+        © 2026 Educare Publishing. Todos los derechos reservados.
+      </p>
+    </footer>
+
+    <div
+      id="mobile-buy-bar"
+      class="mobile-buy-bar"
+    >
+      <div>
+        <span>Primer Año del Bebé</span>
+        <strong>{product.priceLabel}</strong>
+      </div>
+
+      <button
+        type="button"
+        data-buy
+      >
+        Comprar
+      </button>
+    </div>
+
+    <div
+      id="notice"
+      class="notice"
+      role="status"
+      aria-live="polite"
+      hidden
+    ></div>
+
+    <script>
+      import { supabase } from "../../lib/supabase";
+
+      const productId =
+        "recien_nacido";
+
+      const buyButtons =
+        document.querySelectorAll("[data-buy]");
+
+      const notice =
+        document.querySelector("#notice");
+
+      buyButtons.forEach((button) => {
+        button.addEventListener(
+          "click",
+          async () => {
+            await startCheckout(button);
+          }
+        );
+      });
+
+      async function startCheckout(button) {
+        const originalText =
+          button.textContent ||
+          "Comprar";
+
+        setButtonsDisabled(true);
+        button.textContent =
+          "Preparando...";
+
+        showNotice(
+          "Estamos preparando tu pago seguro.",
+          "loading"
+        );
+
+        try {
+          const {
+            data: { session },
+            error: sessionError,
+          } =
+            await supabase.auth.getSession();
+
+          if (sessionError) {
+            throw sessionError;
+          }
+
+          if (!session) {
+            const returnUrl =
+              window.location.pathname;
+
+            sessionStorage.setItem(
+              "educare_return_after_login",
+              returnUrl
+            );
+
+            window.location.href =
+              `/registro?product=${encodeURIComponent(
+                productId
+              )}`;
+
+            return;
+          }
+
+          const response = await fetch(
+            "/api/create-preference",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${session.access_token}`,
+              },
+
+              body: JSON.stringify({
+                productId,
+              }),
+            }
+          );
+
+          const data =
+            await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              data?.error ||
+              data?.details?.message ||
+              "No fue posible iniciar el pago."
+            );
+          }
+
+          const checkoutUrl =
+            data.init_point ||
+            data.sandbox_init_point;
+
+          if (!checkoutUrl) {
+            throw new Error(
+              "Mercado Pago no devolvió el enlace de pago."
+            );
+          }
+
+          showNotice(
+            "Redirigiendo a Mercado Pago...",
+            "success"
+          );
+
+          window.location.href =
+            checkoutUrl;
+        } catch (error) {
+          console.error(
+            "Error iniciando pago:",
+            error
+          );
+
+          showNotice(
+            error instanceof Error
+              ? error.message
+              : "No fue posible conectar con Mercado Pago.",
+            "error"
+          );
+
+          setButtonsDisabled(false);
+          button.textContent =
+            originalText;
+        }
+      }
+
+      function setButtonsDisabled(disabled) {
+        buyButtons.forEach((button) => {
+          button.disabled = disabled;
+        });
+      }
+
+      function showNotice(text, type) {
+        if (!notice) return;
+
+        notice.hidden = false;
+        notice.textContent = text;
+        notice.className =
+          `notice ${type}`;
+
+        if (type !== "loading") {
+          window.setTimeout(() => {
+            notice.hidden = true;
+          }, 5500);
+        }
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  :root {
+    font-family:
+      Inter,
+      system-ui,
+      sans-serif;
+    color: #17324d;
+    background: #fff;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background: #fff;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    font: inherit;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgb(255 255 255 / 94%);
+    border-bottom: 1px solid #e2eaf0;
+    backdrop-filter: blur(16px);
+  }
+
+  .topbar-inner {
+    display: flex;
+    width: min(1180px, 92%);
+    min-height: 76px;
+    margin: auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .brand-copy {
+    display: grid;
+  }
+
+  .brand-copy strong {
+    line-height: 1;
+  }
+
+  .brand-copy small {
+    margin-top: 0.24rem;
+    color: #60758a;
+    font-size: 0.65rem;
+    font-weight: 850;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .logo {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    color: #fff;
+    background:
+      linear-gradient(
+        135deg,
+        #0f7d83,
+        #17324d
+      );
+    border-radius: 13px;
+    font-weight: 900;
+  }
+
+  .main-nav {
+    display: flex;
+    gap: 1.45rem;
+    color: #51687d;
+    font-size: 0.89rem;
+    font-weight: 750;
+  }
+
+  .main-nav a:hover {
+    color: #0f7d83;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .library-link {
+    min-height: 44px;
+    padding: 0.75rem 0.9rem;
+    align-content: center;
+    color: #17324d;
+    font-weight: 800;
+  }
+
+  .header-buy {
+    min-height: 44px;
+    padding: 0.72rem 1rem;
+    color: #fff;
+    background: #17324d;
+    border: 0;
+    border-radius: 10px;
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1.08fr)
+      minmax(340px, 0.92fr);
+    min-height: 730px;
+    padding:
+      5.5rem
+      max(6%, calc((100% - 1180px) / 2));
+    align-items: center;
+    gap: 5rem;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 78% 16%,
+        rgb(15 125 131 / 17%),
+        transparent 31%
+      ),
+      linear-gradient(
+        135deg,
+        #f1faf9,
+        #faf8f5
+      );
+  }
+
+  .hero-copy {
+    max-width: 690px;
+  }
+
+  .hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .category-badge,
+  .digital-badge {
+    display: inline-flex;
+    padding: 0.43rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .category-badge {
+    color: #08765c;
+    background: #e6f6f1;
+  }
+
+  .digital-badge {
+    color: #526b80;
+    background: #edf2f5;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+
+  h1 {
+    margin: 1.2rem 0 1.5rem;
+    font:
+      clamp(3.7rem, 7vw, 6.5rem) / 0.94
+      Georgia,
+      serif;
+    letter-spacing: -0.055em;
+  }
+
+  .hero-subtitle {
+    max-width: 650px;
+    color: #526b80;
+    font-size: 1.15rem;
+    line-height: 1.8;
+  }
+
+  .author-row {
+    display: flex;
+    margin-top: 1.8rem;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .author-avatar {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    color: #fff;
+    background: #0f7d83;
+    border-radius: 50%;
+    font-weight: 850;
+  }
+
+  .author-row div:last-child {
+    display: grid;
+  }
+
+  .author-row span {
+    color: #60758a;
+    font-size: 0.74rem;
+  }
+
+  .hero-checks {
+    display: grid;
+    margin: 1.8rem 0 0;
+    padding: 0;
+    gap: 0.65rem;
+    list-style: none;
+  }
+
+  .hero-checks li {
+    position: relative;
+    padding-left: 1.5rem;
+    color: #3d596c;
+    font-weight: 700;
+  }
+
+  .hero-checks li::before {
+    position: absolute;
+    left: 0;
+    color: #0f7d83;
+    content: "✓";
+  }
+
+  .purchase-card {
+    display: flex;
+    max-width: 620px;
+    margin-top: 2rem;
+    padding: 1.2rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background: #fff;
+    border: 1px solid #d5e4e6;
+    border-radius: 18px;
+    box-shadow:
+      0 22px 55px
+      rgb(23 50 77 / 10%);
+  }
+
+  .purchase-price {
+    display: grid;
+  }
+
+  .purchase-price small {
+    color: #60758a;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .purchase-price strong {
+    margin: 0.2rem 0;
+    font-size: 1.9rem;
+  }
+
+  .purchase-price span {
+    color: #60758a;
+    font-size: 0.75rem;
+  }
+
+  .primary-buy,
+  .final-buy {
+    display: inline-flex;
+    min-height: 52px;
+    padding: 0.9rem 1.3rem;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: #0f7d83;
+    border: 0;
+    border-radius: 11px;
+    font-weight: 850;
+    cursor: pointer;
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .primary-buy:hover:not(:disabled),
+  .final-buy:hover:not(:disabled),
+  .header-buy:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow:
+      0 14px 30px
+      rgb(15 125 131 / 22%);
+  }
+
+  button:disabled {
+    opacity: 0.65;
+    cursor: wait;
+  }
+
+  .payment-note {
+    display: flex;
+    max-width: 620px;
+    margin-top: 1rem;
+    align-items: flex-start;
+    gap: 0.55rem;
+    color: #60758a;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+
+  .payment-note p {
+    margin: 0;
+  }
+
+  .hero-visual {
+    position: relative;
+    display: grid;
+    min-height: 580px;
+    place-items: center;
+  }
+
+  .visual-glow {
+    position: absolute;
+    width: 430px;
+    height: 430px;
+    background:
+      radial-gradient(
+        circle,
+        rgb(238 194 164 / 38%),
+        transparent 67%
+      );
+    border-radius: 50%;
+    filter: blur(15px);
+  }
+
+  .cover-card {
+    position: relative;
+    z-index: 2;
+    width: min(390px, 82%);
+    padding: 1.3rem;
+    background: rgb(255 255 255 / 74%);
+    border: 1px solid rgb(255 255 255 / 88%);
+    border-radius: 30px;
+    box-shadow:
+      0 38px 85px
+      rgb(23 50 77 / 23%);
+    backdrop-filter: blur(14px);
+    transform: rotate(1deg);
+  }
+
+  .cover-card img {
+    display: block;
+    width: 100%;
+    border-radius: 18px;
+  }
+
+  .floating-info {
+    position: absolute;
+    z-index: 3;
+    display: grid;
+    min-width: 175px;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #dfe9ef;
+    border-radius: 15px;
+    box-shadow:
+      0 16px 38px
+      rgb(23 50 77 / 14%);
+  }
+
+  .floating-info span {
+    margin-top: 0.25rem;
+    color: #60758a;
+    font-size: 0.75rem;
+  }
+
+  .info-top {
+    top: 14%;
+    left: 0;
+  }
+
+  .info-bottom {
+    right: 0;
+    bottom: 14%;
+  }
+
+  .trust-bar {
+    display: grid;
+    grid-template-columns:
+      repeat(4, 1fr);
+    width: min(1180px, 92%);
+    margin: -2.5rem auto 0;
+    padding: 1.1rem;
+    gap: 0.65rem;
+    background: #fff;
+    border: 1px solid #dfe9ef;
+    border-radius: 21px;
+    box-shadow:
+      0 22px 55px
+      rgb(23 50 77 / 10%);
+  }
+
+  .trust-bar article {
+    display: flex;
+    padding: 1rem;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .trust-icon {
+    font-size: 1.45rem;
+  }
+
+  .trust-bar strong {
+    display: block;
+    font-size: 0.92rem;
+  }
+
+  .trust-bar p {
+    margin: 0.35rem 0 0;
+    color: #60758a;
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .section {
+    padding:
+      6.5rem
+      max(6%, calc((100% - 1180px) / 2));
+  }
+
+  .section-heading {
+    max-width: 790px;
+    margin-bottom: 3.2rem;
+  }
+
+  .section-heading.centered {
+    margin: 0 auto 3.2rem;
+    text-align: center;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    color: #0f7d83;
+    font-size: 0.75rem;
+    font-weight: 850;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow.light {
+    color: #8ed4d0;
+  }
+
+  .section-heading h2,
+  .content-copy h2,
+  .faq-intro h2,
+  .final-cta h2 {
+    margin: 0.75rem 0 1rem;
+    font:
+      clamp(2.35rem, 4.3vw, 4.15rem) / 1.04
+      Georgia,
+      serif;
+  }
+
+  .section-heading p,
+  .content-copy > p,
+  .faq-intro p,
+  .final-cta p {
+    color: #60758a;
+    line-height: 1.8;
+  }
+
+  .benefits-grid {
+    display: grid;
+    grid-template-columns:
+      repeat(3, 1fr);
+    gap: 1.3rem;
+  }
+
+  .benefits-grid article {
+    padding: 1.85rem;
+    background: #fff;
+    border: 1px solid #e1eaf0;
+    border-radius: 19px;
+    box-shadow:
+      0 15px 40px
+      rgb(23 50 77 / 7%);
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .benefits-grid article:hover {
+    transform: translateY(-5px);
+    box-shadow:
+      0 22px 50px
+      rgb(23 50 77 / 11%);
+  }
+
+  .benefits-grid article > span {
+    font-size: 2rem;
+  }
+
+  .benefits-grid h3 {
+    margin: 1rem 0 0.7rem;
+  }
+
+  .benefits-grid p {
+    margin: 0;
+    color: #60758a;
+    line-height: 1.7;
+  }
+
+  .content-section {
+    background: #17324d;
+  }
+
+  .content-layout {
+    display: grid;
+    grid-template-columns:
+      1.25fr
+      0.75fr;
+    align-items: start;
+    gap: 4.5rem;
+  }
+
+  .content-copy h2 {
+    color: #fff;
+  }
+
+  .content-copy > p {
+    color: #c1d0dc;
+  }
+
+  .content-columns {
+    display: grid;
+    grid-template-columns:
+      1fr
+      1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .content-columns ul {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    gap: 0.75rem;
+    list-style: none;
+  }
+
+  .content-columns li {
+    position: relative;
+    padding-left: 1.5rem;
+    color: #dae5ed;
+    line-height: 1.6;
+  }
+
+  .content-columns li::before {
+    position: absolute;
+    left: 0;
+    color: #75c9c5;
+    content: "✓";
+  }
+
+  .product-summary {
+    padding: 2rem;
+    background: #fff;
+    border-radius: 23px;
+    box-shadow:
+      0 28px 65px
+      rgb(0 0 0 / 22%);
+  }
+
+  .summary-title {
+    color: #0f7d83;
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.13em;
+  }
+
+  .product-summary dl {
+    display: grid;
+    margin: 1.4rem 0;
+  }
+
+  .product-summary dl div {
+    display: grid;
+    grid-template-columns:
+      0.8fr
+      1.2fr;
+    padding: 0.85rem 0;
+    gap: 1rem;
+    border-bottom: 1px solid #e7edf2;
+  }
+
+  .product-summary dt {
+    color: #60758a;
+    font-size: 0.8rem;
+  }
+
+  .product-summary dd {
+    margin: 0;
+    text-align: right;
+    font-size: 0.84rem;
+    font-weight: 750;
+  }
+
+  .summary-buy {
+    width: 100%;
+  }
+
+  .process-section {
+    background: #f7fafb;
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns:
+      repeat(3, 1fr);
+    gap: 1.3rem;
+  }
+
+  .steps-grid article {
+    position: relative;
+    padding: 2rem;
+    background: #fff;
+    border: 1px solid #e0e9ee;
+    border-radius: 19px;
+  }
+
+  .steps-grid article > span,
+  .audience-grid article > span {
+    color: #0f7d83;
+    font-size: 1.55rem;
+    font-weight: 900;
+  }
+
+  .steps-grid h3,
+  .audience-grid h3 {
+    margin: 1rem 0 0.65rem;
+  }
+
+  .steps-grid p,
+  .audience-grid p {
+    margin: 0;
+    color: #60758a;
+    line-height: 1.7;
+  }
+
+  .audience-grid {
+    display: grid;
+    grid-template-columns:
+      repeat(4, 1fr);
+    gap: 1.2rem;
+  }
+
+  .audience-grid article {
+    padding: 1.8rem;
+    background:
+      linear-gradient(
+        145deg,
+        #f3fbfa,
+        #faf8f5
+      );
+    border: 1px solid #dce8ec;
+    border-radius: 19px;
+  }
+
+  .faq-section {
+    background: #f4f8fa;
+  }
+
+  .faq-layout {
+    display: grid;
+    grid-template-columns:
+      0.85fr
+      1.15fr;
+    gap: 5rem;
+  }
+
+  .faq-list {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  details {
+    padding: 1.2rem;
+    background: #fff;
+    border: 1px solid #dde7ed;
+    border-radius: 14px;
+  }
+
+  summary {
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  details p {
+    margin: 0.9rem 0 0;
+    color: #60758a;
+    line-height: 1.7;
+  }
+
+  .final-cta {
+    display: flex;
+    margin:
+      0
+      max(6%, calc((100% - 1180px) / 2))
+      6rem;
+    padding: 3.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+    color: #fff;
+    background:
+      linear-gradient(
+        135deg,
+        #0f7d83,
+        #17324d
+      );
+    border-radius: 29px;
+  }
+
+  .final-cta h2 {
+    max-width: 730px;
+    color: #fff;
+  }
+
+  .final-cta p {
+    max-width: 680px;
+    color: #d5e6e7;
+  }
+
+  .final-purchase {
+    display: grid;
+    min-width: 250px;
+    gap: 1rem;
+  }
+
+  .final-purchase > strong {
+    text-align: center;
+    font-size: 2rem;
+  }
+
+  .final-buy {
+    background: #fff;
+    color: #17324d;
+  }
+
+  footer {
+    display: flex;
+    padding:
+      2rem
+      max(6%, calc((100% - 1180px) / 2));
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    border-top: 1px solid #e2eaf0;
+  }
+
+  footer p {
+    margin: 0;
+    color: #60758a;
+    font-size: 0.84rem;
+  }
+
+  .mobile-buy-bar {
+    display: none;
+  }
+
+  .notice {
+    position: fixed;
+    right: 1.4rem;
+    bottom: 1.4rem;
+    z-index: 100;
+    max-width: min(380px, calc(100% - 2.8rem));
+    padding: 1rem 1.15rem;
+    color: #fff;
+    background: #17324d;
+    border-radius: 13px;
+    box-shadow:
+      0 18px 45px
+      rgb(23 50 77 / 24%);
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .notice.success {
+    background: #08765c;
+  }
+
+  .notice.error {
+    background: #a92d3d;
+  }
+
+  @media (max-width: 1020px) {
+    .main-nav {
+      display: none;
+    }
+
+    .hero {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-visual {
+      min-height: 530px;
+    }
+
+    .trust-bar {
+      grid-template-columns:
+        repeat(2, 1fr);
+    }
+
+    .benefits-grid {
+      grid-template-columns:
+        repeat(2, 1fr);
+    }
+
+    .content-layout,
+    .faq-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .audience-grid {
+      grid-template-columns:
+        repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 720px) {
+    body {
+      padding-bottom: 78px;
+    }
+
+    .brand-copy,
+    .header-buy {
+      display: none;
+    }
+
+    .library-link {
+      padding: 0.65rem;
+      font-size: 0.82rem;
+    }
+
+    .hero {
+      min-height: auto;
+      padding-top: 3.8rem;
+      padding-bottom: 4rem;
+    }
+
+    h1 {
+      font-size: clamp(3.2rem, 17vw, 4.8rem);
+    }
+
+    .purchase-card {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .primary-buy {
+      width: 100%;
+    }
+
+    .hero-visual {
+      min-height: 430px;
+    }
+
+    .floating-info {
+      display: none;
+    }
+
+    .trust-bar,
+    .benefits-grid,
+    .steps-grid,
+    .audience-grid,
+    .content-columns {
+      grid-template-columns: 1fr;
+    }
+
+    .trust-bar {
+      margin-top: 1.4rem;
+    }
+
+    .product-summary dl div {
+      grid-template-columns: 1fr;
+    }
+
+    .product-summary dd {
+      text-align: left;
+    }
+
+    .final-cta,
+    footer {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .final-cta {
+      padding: 2rem;
+    }
+
+    .final-purchase {
+      min-width: 0;
+    }
+
+    footer {
+      text-align: center;
+    }
+
+    .mobile-buy-bar {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 90;
+      display: flex;
+      min-height: 72px;
+      padding:
+        0.75rem
+        1rem;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: rgb(255 255 255 / 96%);
+      border-top: 1px solid #dce5eb;
+      box-shadow:
+        0 -12px 35px
+        rgb(23 50 77 / 11%);
+      backdrop-filter: blur(14px);
+    }
+
+    .mobile-buy-bar div {
+      display: grid;
+    }
+
+    .mobile-buy-bar span {
+      color: #60758a;
+      font-size: 0.72rem;
+    }
+
+    .mobile-buy-bar strong {
+      font-size: 1.1rem;
+    }
+
+    .mobile-buy-bar button {
+      min-height: 44px;
+      padding: 0.7rem 1rem;
+      color: #fff;
+      background: #0f7d83;
+      border: 0;
+      border-radius: 10px;
+      font-weight: 850;
+    }
+
+    .notice {
+      bottom: 5.8rem;
+    }
+  }
+</style>
