@@ -2,14 +2,39 @@
 const product = {
   id: "lactancia_materna",
   title: "Lactancia Materna",
+  shortTitle: "Lactancia Materna",
   subtitle:
     "Una guía práctica, cercana y profesional para vivir la lactancia con mayor seguridad, confianza y tranquilidad.",
-  price: "$50.000",
+  price: 50000,
+  priceLabel: "$50.000",
   cover: "/portadas/lactancia-materna.png",
   author: "Andrea Carolina Reyes Hernández",
   category: "Maternidad y salud",
   format: "PDF digital",
   access: "Acceso inmediato",
+  pages: "104 páginas",
+  language: "Español",
+};
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Book",
+  name: product.title,
+  author: {
+    "@type": "Person",
+    name: product.author,
+  },
+  bookFormat: "https://schema.org/EBook",
+  inLanguage: "es",
+  image: `https://educarepublishing.cl${product.cover}`,
+  description: product.subtitle,
+  offers: {
+    "@type": "Offer",
+    priceCurrency: "CLP",
+    price: product.price,
+    availability: "https://schema.org/InStock",
+    url: "https://educarepublishing.cl/ebook/lactancia-materna/",
+  },
 };
 ---
 
@@ -25,8 +50,43 @@ const product = {
 
     <meta
       name="description"
-      content="Lactancia Materna: guía práctica y profesional sobre agarre, posiciones, extracción, conservación, dificultades frecuentes y destete respetuoso."
+      content="Lactancia Materna: guía práctica sobre agarre, posiciones, extracción, conservación, dificultades frecuentes y destete respetuoso."
     />
+
+    <meta
+      property="og:title"
+      content="Lactancia Materna | Educare Publishing"
+    />
+
+    <meta
+      property="og:description"
+      content={product.subtitle}
+    />
+
+    <meta
+      property="og:image"
+      content={`https://educarepublishing.cl${product.cover}`}
+    />
+
+    <meta
+      property="og:type"
+      content="product"
+    />
+
+    <meta
+      property="og:url"
+      content="https://educarepublishing.cl/ebook/lactancia-materna/"
+    />
+
+    <link
+      rel="canonical"
+      href="https://educarepublishing.cl/ebook/lactancia-materna/"
+    />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(schema)}
+    ></script>
 
     <title>
       Lactancia Materna | Educare Publishing
@@ -51,25 +111,42 @@ const product = {
         >
           <a href="/">Inicio</a>
           <a href="/#ebooks">Ebooks</a>
+          <a href="#beneficios">Beneficios</a>
           <a href="#contenido">Contenido</a>
-          <a href="#preguntas">Preguntas frecuentes</a>
+          <a href="#preguntas">Preguntas</a>
         </nav>
 
-        <a
-          class="library-link"
-          href="/mi-biblioteca"
-        >
-          Mi biblioteca
-        </a>
+        <div class="header-actions">
+          <a
+            class="library-link"
+            href="/mi-biblioteca"
+          >
+            Mi biblioteca
+          </a>
+
+          <button
+            class="header-buy"
+            type="button"
+            data-buy
+          >
+            Comprar
+          </button>
+        </div>
       </div>
     </header>
 
     <main>
       <section class="hero">
-        <div class="hero-content">
-          <span class="eyebrow">
-            {product.category}
-          </span>
+        <div class="hero-copy">
+          <div class="hero-badges">
+            <span class="category-badge">
+              {product.category}
+            </span>
+
+            <span class="digital-badge">
+              Ebook digital
+            </span>
+          </div>
 
           <h1>{product.title}</h1>
 
@@ -83,110 +160,124 @@ const product = {
             </div>
 
             <div>
-              <span>Escrito por</span>
+              <span>Autora</span>
               <strong>{product.author}</strong>
             </div>
           </div>
 
-          <div class="hero-features">
-            <span>✓ Lectura clara y cercana</span>
-            <span>✓ Acceso desde tu biblioteca</span>
-            <span>✓ Descarga protegida en PDF</span>
-          </div>
+          <ul class="hero-checks">
+            <li>Información clara y fácil de consultar.</li>
+            <li>Acceso seguro desde tu biblioteca personal.</li>
+            <li>Lectura online y descarga protegida en PDF.</li>
+          </ul>
 
-          <div class="price-row">
-            <div>
-              <small>Precio lanzamiento</small>
-              <strong>{product.price}</strong>
+          <div class="purchase-card">
+            <div class="purchase-price">
+              <small>Precio del ebook</small>
+              <strong>{product.priceLabel}</strong>
+              <span>Pago único · Sin suscripción</span>
             </div>
 
             <button
-              id="buy-button"
-              class="buy-button"
+              class="primary-buy"
               type="button"
-              data-product-id={product.id}
+              data-buy
             >
               Comprar ahora
             </button>
           </div>
 
-          <p class="secure-note">
-            Pago seguro mediante Mercado Pago. Después de la aprobación,
-            el ebook aparecerá automáticamente en tu biblioteca.
-          </p>
+          <div class="payment-note">
+            <span aria-hidden="true">🔒</span>
+            <p>
+              Compra segura con Mercado Pago. Cuando el pago sea aprobado,
+              el ebook aparecerá automáticamente en “Mi biblioteca”.
+            </p>
+          </div>
         </div>
 
         <div class="hero-visual">
-          <div class="cover-frame">
+          <div class="visual-glow"></div>
+
+          <div class="cover-card">
             <img
               src={product.cover}
               alt={`Portada del ebook ${product.title}`}
             />
           </div>
 
-          <div class="floating-card card-one">
-            <strong>{product.format}</strong>
-            <span>Formato digital</span>
+          <div class="floating-info info-top">
+            <strong>{product.pages}</strong>
+            <span>Contenido ilustrado</span>
           </div>
 
-          <div class="floating-card card-two">
+          <div class="floating-info info-bottom">
             <strong>{product.access}</strong>
             <span>Después del pago</span>
           </div>
         </div>
       </section>
 
-      <section class="trust-strip">
+      <section class="trust-bar">
         <article>
-          <span>🔒</span>
+          <span class="trust-icon">🔒</span>
           <div>
-            <strong>Compra segura</strong>
-            <p>Pago procesado por Mercado Pago.</p>
+            <strong>Pago protegido</strong>
+            <p>Procesado de forma segura por Mercado Pago.</p>
           </div>
         </article>
 
         <article>
-          <span>📚</span>
+          <span class="trust-icon">📚</span>
           <div>
             <strong>Biblioteca personal</strong>
-            <p>Accede cuando quieras con tu cuenta.</p>
+            <p>Tu compra queda asociada a tu cuenta.</p>
           </div>
         </article>
 
         <article>
-          <span>⬇️</span>
+          <span class="trust-icon">📱</span>
           <div>
-            <strong>Descarga protegida</strong>
-            <p>PDF disponible solo para compradores.</p>
+            <strong>Acceso multidispositivo</strong>
+            <p>Lee desde computador, tablet o teléfono.</p>
+          </div>
+        </article>
+
+        <article>
+          <span class="trust-icon">⬇️</span>
+          <div>
+            <strong>Descarga disponible</strong>
+            <p>Guarda el PDF desde tu biblioteca.</p>
           </div>
         </article>
       </section>
 
-      <section class="section benefits-section">
+      <section
+        id="beneficios"
+        class="section benefits-section"
+      >
         <div class="section-heading">
           <span class="eyebrow">
-            TODO LO QUE NECESITAS
+            UNA GUÍA PARA ACOMPAÑARTE
           </span>
 
           <h2>
-            Una guía pensada para acompañarte
-            en cada etapa de la lactancia
+            Información práctica para vivir la lactancia con mayor confianza
           </h2>
 
           <p>
-            Información práctica, explicada con lenguaje sencillo,
-            para ayudarte a comprender lo que ocurre, resolver dudas
-            frecuentes y tomar decisiones informadas.
+            Un recurso organizado, visual y cercano para consultar en cada
+            etapa, comprender lo que ocurre y abordar dudas frecuentes.
           </p>
         </div>
 
-        <div class="benefit-grid">
+        <div class="benefits-grid">
           <article>
             <span>🤱</span>
-            <h3>Inicio de la lactancia</h3>
+            <h3>Primeros días</h3>
             <p>
-              Comprende los primeros días, el calostro, la subida de la leche
-              y las señales de una alimentación efectiva.
+              Calostro, subida de la leche, frecuencia de las tomas y señales
+              de alimentación efectiva.
             </p>
           </article>
 
@@ -194,8 +285,8 @@ const product = {
             <span>🫶</span>
             <h3>Agarre y posiciones</h3>
             <p>
-              Aprende a reconocer un buen acople y conoce distintas posiciones
-              para alimentar al bebé con mayor comodidad.
+              Cómo reconocer un buen acople y adaptar distintas posiciones
+              para amamantar con mayor comodidad.
             </p>
           </article>
 
@@ -203,8 +294,8 @@ const product = {
             <span>🍼</span>
             <h3>Extracción y conservación</h3>
             <p>
-              Orientaciones sobre extracción manual, uso de bombas,
-              almacenamiento y manejo seguro de la leche materna.
+              Extracción manual, uso de bombas y manejo seguro de la leche
+              materna.
             </p>
           </article>
 
@@ -212,17 +303,17 @@ const product = {
             <span>🌿</span>
             <h3>Dificultades frecuentes</h3>
             <p>
-              Qué hacer frente a dolor, grietas, congestión, mastitis,
-              baja producción percibida y otras situaciones habituales.
+              Orientación frente a grietas, congestión, mastitis y dolor
+              durante la lactancia.
             </p>
           </article>
 
           <article>
             <span>💼</span>
-            <h3>Lactancia y trabajo</h3>
+            <h3>Regreso al trabajo</h3>
             <p>
-              Ideas prácticas para organizar la extracción, conservar la leche
-              y mantener la lactancia al volver a las actividades laborales.
+              Organización de la extracción y conservación para mantener la
+              lactancia al retomar las actividades.
             </p>
           </article>
 
@@ -230,20 +321,20 @@ const product = {
             <span>🌙</span>
             <h3>Destete respetuoso</h3>
             <p>
-              Acompañamiento para transitar el destete de manera gradual,
-              sensible y respetuosa para la madre y el niño.
+              Claves para transitar el destete de manera gradual, sensible y
+              respetuosa.
             </p>
           </article>
         </div>
       </section>
 
       <section
-        class="section content-section"
         id="contenido"
+        class="section content-section"
       >
-        <div class="content-panel">
+        <div class="content-layout">
           <div class="content-copy">
-            <span class="eyebrow">
+            <span class="eyebrow light">
               CONTENIDO DEL EBOOK
             </span>
 
@@ -252,29 +343,34 @@ const product = {
             </h2>
 
             <p>
-              El ebook combina orientación práctica, fundamentos de salud,
-              ejemplos cotidianos y recomendaciones para fortalecer la
-              confianza durante la lactancia.
+              Más de 100 páginas de contenido visual y educativo sobre los
+              aspectos esenciales de la lactancia materna.
             </p>
 
-            <ul class="content-list">
-              <li>Cómo se produce la leche materna.</li>
-              <li>Señales de hambre y saciedad del bebé.</li>
-              <li>Posiciones y técnicas de agarre.</li>
-              <li>Cómo saber si el bebé está recibiendo suficiente leche.</li>
-              <li>Extracción manual y con bomba.</li>
-              <li>Conservación y transporte de leche materna.</li>
-              <li>Dolor, grietas, congestión y mastitis.</li>
-              <li>Lactancia en prematuros y situaciones especiales.</li>
-              <li>Compatibilidad con medicamentos.</li>
-              <li>Regreso al trabajo y organización familiar.</li>
-              <li>Lactancia prolongada y destete respetuoso.</li>
-            </ul>
+            <div class="content-columns">
+              <ul>
+                <li>Cómo se produce la leche materna.</li>
+                <li>Señales de hambre y saciedad.</li>
+                <li>Posiciones y técnicas de agarre.</li>
+                <li>Transferencia adecuada de leche.</li>
+                <li>Extracción manual y con bomba.</li>
+                <li>Conservación y transporte.</li>
+              </ul>
+
+              <ul>
+                <li>Dolor, grietas y congestión.</li>
+                <li>Mastitis y otras dificultades.</li>
+                <li>Lactancia en situaciones especiales.</li>
+                <li>Compatibilidad con medicamentos.</li>
+                <li>Regreso al trabajo.</li>
+                <li>Lactancia prolongada y destete.</li>
+              </ul>
+            </div>
           </div>
 
-          <aside class="summary-card">
-            <span class="summary-label">
-              INFORMACIÓN DEL EBOOK
+          <aside class="product-summary">
+            <span class="summary-title">
+              FICHA DEL EBOOK
             </span>
 
             <dl>
@@ -284,13 +380,18 @@ const product = {
               </div>
 
               <div>
-                <dt>Categoría</dt>
-                <dd>{product.category}</dd>
+                <dt>Formato</dt>
+                <dd>{product.format}</dd>
               </div>
 
               <div>
-                <dt>Formato</dt>
-                <dd>{product.format}</dd>
+                <dt>Extensión</dt>
+                <dd>{product.pages}</dd>
+              </div>
+
+              <div>
+                <dt>Idioma</dt>
+                <dd>{product.language}</dd>
               </div>
 
               <div>
@@ -305,20 +406,61 @@ const product = {
             </dl>
 
             <button
-              class="buy-button secondary-buy"
+              class="primary-buy summary-buy"
               type="button"
-              data-product-id={product.id}
+              data-buy
             >
-              Comprar por {product.price}
+              Comprar por {product.priceLabel}
             </button>
           </aside>
+        </div>
+      </section>
+
+      <section class="section process-section">
+        <div class="section-heading centered">
+          <span class="eyebrow">
+            COMPRA SIMPLE Y SEGURA
+          </span>
+
+          <h2>
+            Obtén tu ebook en tres pasos
+          </h2>
+        </div>
+
+        <div class="steps-grid">
+          <article>
+            <span>01</span>
+            <h3>Crea o ingresa a tu cuenta</h3>
+            <p>
+              Tu cuenta permite asociar la compra y proteger el acceso al
+              archivo.
+            </p>
+          </article>
+
+          <article>
+            <span>02</span>
+            <h3>Realiza el pago</h3>
+            <p>
+              Mercado Pago procesa la operación y comunica su estado de forma
+              automática.
+            </p>
+          </article>
+
+          <article>
+            <span>03</span>
+            <h3>Accede a tu biblioteca</h3>
+            <p>
+              Cuando el pago sea aprobado podrás leer online o descargar el
+              PDF.
+            </p>
+          </article>
         </div>
       </section>
 
       <section class="section audience-section">
         <div class="section-heading centered">
           <span class="eyebrow">
-            ¿PARA QUIÉN ES ESTA GUÍA?
+            ¿PARA QUIÉN ES?
           </span>
 
           <h2>
@@ -331,17 +473,16 @@ const product = {
             <span>01</span>
             <h3>Futuras madres</h3>
             <p>
-              Para prepararse con anticipación y comprender cómo funciona
-              la lactancia antes del nacimiento.
+              Para comprender cómo funciona la lactancia antes del nacimiento.
             </p>
           </article>
 
           <article>
             <span>02</span>
-            <h3>Madres en etapa de lactancia</h3>
+            <h3>Madres en lactancia</h3>
             <p>
-              Para resolver dudas, reconocer señales y enfrentar dificultades
-              frecuentes con mayor seguridad.
+              Para resolver dudas y enfrentar dificultades con mayor
+              seguridad.
             </p>
           </article>
 
@@ -349,8 +490,7 @@ const product = {
             <span>03</span>
             <h3>Familias y cuidadores</h3>
             <p>
-              Para comprender cómo brindar apoyo práctico y emocional durante
-              el proceso de lactancia.
+              Para comprender cómo brindar apoyo práctico y emocional.
             </p>
           </article>
 
@@ -358,19 +498,18 @@ const product = {
             <span>04</span>
             <h3>Estudiantes y profesionales</h3>
             <p>
-              Como recurso educativo complementario en salud materna,
-              puericultura y acompañamiento familiar.
+              Como recurso educativo complementario en salud materna.
             </p>
           </article>
         </div>
       </section>
 
       <section
-        class="section faq-section"
         id="preguntas"
+        class="section faq-section"
       >
         <div class="faq-layout">
-          <div>
+          <div class="faq-intro">
             <span class="eyebrow">
               PREGUNTAS FRECUENTES
             </span>
@@ -380,8 +519,8 @@ const product = {
             </h2>
 
             <p>
-              La compra es digital, segura y se vincula directamente
-              con tu cuenta de Educare Publishing.
+              La compra es digital, segura y queda asociada a tu cuenta de
+              Educare Publishing.
             </p>
           </div>
 
@@ -393,7 +532,7 @@ const product = {
 
               <p>
                 Cuando Mercado Pago aprueba la operación, el ebook aparece
-                automáticamente en la sección “Mi biblioteca”.
+                automáticamente en “Mi biblioteca”.
               </p>
             </details>
 
@@ -403,8 +542,8 @@ const product = {
               </summary>
 
               <p>
-                Sí. Puedes ingresar a tu cuenta desde distintos dispositivos,
-                leer el PDF online o descargarlo.
+                Sí. Puedes ingresar desde distintos dispositivos, leer online o
+                descargar el PDF.
               </p>
             </details>
 
@@ -414,8 +553,8 @@ const product = {
               </summary>
 
               <p>
-                Sí. Una vez aprobado el pago, podrás generar un enlace seguro
-                desde tu biblioteca.
+                Queda disponible cuando Mercado Pago confirma que la operación
+                fue aprobada.
               </p>
             </details>
 
@@ -425,8 +564,8 @@ const product = {
               </summary>
 
               <p>
-                Sí. La cuenta permite vincular la compra a tu biblioteca
-                personal y proteger el acceso al archivo.
+                Sí. La cuenta permite vincular la compra a tu biblioteca y
+                proteger el acceso.
               </p>
             </details>
 
@@ -445,28 +584,26 @@ const product = {
 
       <section class="final-cta">
         <div>
-          <span class="eyebrow">
+          <span class="eyebrow light">
             EMPIEZA HOY
           </span>
 
           <h2>
-            Vive la lactancia con más información,
-            confianza y tranquilidad
+            Vive la lactancia con más información, confianza y tranquilidad
           </h2>
 
           <p>
-            Obtén acceso inmediato a una guía práctica creada para acompañarte
-            en cada etapa.
+            Accede a una guía práctica creada para acompañarte en cada etapa.
           </p>
         </div>
 
-        <div class="final-price">
-          <span>{product.price}</span>
+        <div class="final-purchase">
+          <strong>{product.priceLabel}</strong>
 
           <button
-            class="buy-button"
+            class="final-buy"
             type="button"
-            data-product-id={product.id}
+            data-buy
           >
             Comprar Lactancia Materna
           </button>
@@ -489,49 +626,91 @@ const product = {
       </p>
     </footer>
 
+    <div
+      id="mobile-buy-bar"
+      class="mobile-buy-bar"
+    >
+      <div>
+        <span>Lactancia Materna</span>
+        <strong>{product.priceLabel}</strong>
+      </div>
+
+      <button
+        type="button"
+        data-buy
+      >
+        Comprar
+      </button>
+    </div>
+
+    <div
+      id="notice"
+      class="notice"
+      role="status"
+      aria-live="polite"
+      hidden
+    ></div>
+
     <script>
       import { supabase } from "../../lib/supabase";
 
       const productId =
         "lactancia_materna";
 
-      document
-        .querySelectorAll(".buy-button")
-        .forEach((button) => {
-          button.addEventListener(
-            "click",
-            async () => {
-              await startCheckout(
-                productId,
-                button
-              );
-            }
-          );
-        });
+      const buyButtons =
+        document.querySelectorAll("[data-buy]");
 
-      async function startCheckout(
-        productId,
-        button
-      ) {
+      const notice =
+        document.querySelector("#notice");
+
+      buyButtons.forEach((button) => {
+        button.addEventListener(
+          "click",
+          async () => {
+            await startCheckout(button);
+          }
+        );
+      });
+
+      async function startCheckout(button) {
         const originalText =
           button.textContent ||
-          "Comprar ahora";
+          "Comprar";
 
-        button.disabled = true;
+        setButtonsDisabled(true);
         button.textContent =
-          "Preparando pago...";
+          "Preparando...";
+
+        showNotice(
+          "Estamos preparando tu pago seguro.",
+          "loading"
+        );
 
         try {
           const {
             data: { session },
+            error: sessionError,
           } =
             await supabase.auth.getSession();
 
+          if (sessionError) {
+            throw sessionError;
+          }
+
           if (!session) {
+            const returnUrl =
+              window.location.pathname;
+
+            sessionStorage.setItem(
+              "educare_return_after_login",
+              returnUrl
+            );
+
             window.location.href =
               `/registro?product=${encodeURIComponent(
                 productId
               )}`;
+
             return;
           }
 
@@ -575,6 +754,11 @@ const product = {
             );
           }
 
+          showNotice(
+            "Redirigiendo a Mercado Pago...",
+            "success"
+          );
+
           window.location.href =
             checkoutUrl;
         } catch (error) {
@@ -583,15 +767,37 @@ const product = {
             error
           );
 
-          alert(
+          showNotice(
             error instanceof Error
               ? error.message
-              : "No fue posible conectar con Mercado Pago."
+              : "No fue posible conectar con Mercado Pago.",
+            "error"
           );
 
-          button.disabled = false;
+          setButtonsDisabled(false);
           button.textContent =
             originalText;
+        }
+      }
+
+      function setButtonsDisabled(disabled) {
+        buyButtons.forEach((button) => {
+          button.disabled = disabled;
+        });
+      }
+
+      function showNotice(text, type) {
+        if (!notice) return;
+
+        notice.hidden = false;
+        notice.textContent = text;
+        notice.className =
+          `notice ${type}`;
+
+        if (type !== "loading") {
+          window.setTimeout(() => {
+            notice.hidden = true;
+          }, 5500);
         }
       }
     </script>
@@ -604,7 +810,6 @@ const product = {
       Inter,
       system-ui,
       sans-serif;
-
     color: #17324d;
     background: #fff;
   }
@@ -634,37 +839,25 @@ const product = {
   .topbar {
     position: sticky;
     top: 0;
-    z-index: 30;
-
-    background:
-      rgb(255 255 255 / 94%);
-
-    border-bottom:
-      1px solid #e2eaf0;
-
-    backdrop-filter:
-      blur(15px);
+    z-index: 50;
+    background: rgb(255 255 255 / 94%);
+    border-bottom: 1px solid #e2eaf0;
+    backdrop-filter: blur(16px);
   }
 
   .topbar-inner {
     display: flex;
-
     width: min(1180px, 92%);
     min-height: 76px;
-
     margin: auto;
-
     align-items: center;
     justify-content: space-between;
-
     gap: 2rem;
   }
 
   .brand {
     display: inline-flex;
-
     align-items: center;
-
     gap: 0.75rem;
   }
 
@@ -677,47 +870,35 @@ const product = {
   }
 
   .brand-copy small {
-    margin-top: 0.22rem;
-
+    margin-top: 0.24rem;
     color: #60758a;
-
     font-size: 0.65rem;
     font-weight: 850;
-
     letter-spacing: 0.16em;
     text-transform: uppercase;
   }
 
   .logo {
     display: grid;
-
     width: 46px;
     height: 46px;
-
     place-items: center;
-
     color: #fff;
-
     background:
       linear-gradient(
         135deg,
         #0f7d83,
         #17324d
       );
-
     border-radius: 13px;
-
     font-weight: 900;
   }
 
   .main-nav {
     display: flex;
-
-    gap: 1.5rem;
-
+    gap: 1.45rem;
     color: #51687d;
-
-    font-size: 0.9rem;
+    font-size: 0.89rem;
     font-weight: 750;
   }
 
@@ -725,72 +906,85 @@ const product = {
     color: #0f7d83;
   }
 
-  .library-link {
-    display: inline-flex;
-
-    min-height: 44px;
-
-    padding:
-      0.75rem
-      1rem;
-
+  .header-actions {
+    display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.7rem;
+  }
 
+  .library-link {
+    min-height: 44px;
+    padding: 0.75rem 0.9rem;
+    align-content: center;
+    color: #17324d;
+    font-weight: 800;
+  }
+
+  .header-buy {
+    min-height: 44px;
+    padding: 0.72rem 1rem;
     color: #fff;
     background: #17324d;
-
+    border: 0;
     border-radius: 10px;
-
-    font-weight: 800;
+    font-weight: 850;
+    cursor: pointer;
   }
 
   .hero {
     display: grid;
-
     grid-template-columns:
-      1.05fr
-      0.95fr;
-
-    min-height: 720px;
-
+      minmax(0, 1.08fr)
+      minmax(340px, 0.92fr);
+    min-height: 730px;
     padding:
-      5rem
+      5.5rem
       max(6%, calc((100% - 1180px) / 2));
-
     align-items: center;
-
     gap: 5rem;
-
     overflow: hidden;
-
     background:
       radial-gradient(
-        circle at 78% 15%,
-        rgb(15 125 131 / 15%),
-        transparent 30%
+        circle at 78% 16%,
+        rgb(15 125 131 / 17%),
+        transparent 31%
       ),
       linear-gradient(
         135deg,
         #f1faf9,
-        #f8fafc
+        #faf8f5
       );
   }
 
-  .hero-content {
+  .hero-copy {
     max-width: 690px;
   }
 
-  .eyebrow {
-    display: inline-block;
+  .hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
 
-    color: #0f7d83;
-
-    font-size: 0.76rem;
+  .category-badge,
+  .digital-badge {
+    display: inline-flex;
+    padding: 0.43rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
     font-weight: 850;
-
-    letter-spacing: 0.18em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
+  }
+
+  .category-badge {
+    color: #08765c;
+    background: #e6f6f1;
+  }
+
+  .digital-badge {
+    color: #526b80;
+    background: #edf2f5;
   }
 
   h1,
@@ -801,55 +995,36 @@ const product = {
   }
 
   h1 {
-    margin:
-      1rem
-      0
-      1.5rem;
-
+    margin: 1.2rem 0 1.5rem;
     font:
-      clamp(
-        3.5rem,
-        7vw,
-        6.3rem
-      ) / 0.95
+      clamp(3.7rem, 7vw, 6.5rem) / 0.94
       Georgia,
       serif;
-
     letter-spacing: -0.055em;
   }
 
   .hero-subtitle {
-    max-width: 640px;
-
+    max-width: 650px;
     color: #526b80;
-
     font-size: 1.15rem;
     line-height: 1.8;
   }
 
   .author-row {
     display: flex;
-
-    margin-top: 2rem;
-
+    margin-top: 1.8rem;
     align-items: center;
-
-    gap: 0.9rem;
+    gap: 0.85rem;
   }
 
   .author-avatar {
     display: grid;
-
     width: 48px;
     height: 48px;
-
     place-items: center;
-
     color: #fff;
     background: #0f7d83;
-
     border-radius: 50%;
-
     font-weight: 850;
   }
 
@@ -859,359 +1034,313 @@ const product = {
 
   .author-row span {
     color: #60758a;
-
-    font-size: 0.75rem;
+    font-size: 0.74rem;
   }
 
-  .hero-features {
-    display: flex;
-    flex-wrap: wrap;
+  .hero-checks {
+    display: grid;
+    margin: 1.8rem 0 0;
+    padding: 0;
+    gap: 0.65rem;
+    list-style: none;
+  }
 
-    gap:
-      0.8rem
-      1.3rem;
-
-    margin-top: 2rem;
-
+  .hero-checks li {
+    position: relative;
+    padding-left: 1.5rem;
     color: #3d596c;
-
-    font-size: 0.88rem;
     font-weight: 700;
   }
 
-  .price-row {
-    display: flex;
-
-    max-width: 610px;
-
-    margin-top: 2rem;
-    padding: 1.25rem;
-
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 1.5rem;
-
-    background: #fff;
-
-    border:
-      1px solid
-      #d7e6e8;
-
-    border-radius: 18px;
-
-    box-shadow:
-      0 20px 50px
-      rgb(23 50 77 / 9%);
+  .hero-checks li::before {
+    position: absolute;
+    left: 0;
+    color: #0f7d83;
+    content: "✓";
   }
 
-  .price-row div {
+  .purchase-card {
+    display: flex;
+    max-width: 620px;
+    margin-top: 2rem;
+    padding: 1.2rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background: #fff;
+    border: 1px solid #d5e4e6;
+    border-radius: 18px;
+    box-shadow:
+      0 22px 55px
+      rgb(23 50 77 / 10%);
+  }
+
+  .purchase-price {
     display: grid;
   }
 
-  .price-row small {
+  .purchase-price small {
     color: #60758a;
-
-    font-size: 0.72rem;
-    font-weight: 750;
-
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
-  .price-row strong {
-    margin-top: 0.25rem;
-
-    font-size: 1.8rem;
+  .purchase-price strong {
+    margin: 0.2rem 0;
+    font-size: 1.9rem;
   }
 
-  .buy-button {
+  .purchase-price span {
+    color: #60758a;
+    font-size: 0.75rem;
+  }
+
+  .primary-buy,
+  .final-buy {
     display: inline-flex;
-
-    min-height: 50px;
-
-    padding:
-      0.85rem
-      1.25rem;
-
+    min-height: 52px;
+    padding: 0.9rem 1.3rem;
     align-items: center;
     justify-content: center;
-
     color: #fff;
     background: #0f7d83;
-
     border: 0;
     border-radius: 11px;
-
     font-weight: 850;
-
     cursor: pointer;
-
     transition:
       transform 180ms ease,
       box-shadow 180ms ease;
   }
 
-  .buy-button:hover:not(:disabled) {
-    transform:
-      translateY(-2px);
-
+  .primary-buy:hover:not(:disabled),
+  .final-buy:hover:not(:disabled),
+  .header-buy:hover:not(:disabled) {
+    transform: translateY(-2px);
     box-shadow:
       0 14px 30px
       rgb(15 125 131 / 22%);
   }
 
-  .buy-button:disabled {
+  button:disabled {
     opacity: 0.65;
     cursor: wait;
   }
 
-  .secure-note {
-    max-width: 610px;
-
+  .payment-note {
+    display: flex;
+    max-width: 620px;
     margin-top: 1rem;
-
+    align-items: flex-start;
+    gap: 0.55rem;
     color: #60758a;
-
     font-size: 0.8rem;
     line-height: 1.6;
   }
 
+  .payment-note p {
+    margin: 0;
+  }
+
   .hero-visual {
     position: relative;
-
     display: grid;
-
-    min-height: 560px;
-
+    min-height: 580px;
     place-items: center;
   }
 
-  .cover-frame {
-    position: relative;
-
-    z-index: 2;
-
-    width: min(390px, 80%);
-
-    padding: 1.4rem;
-
+  .visual-glow {
+    position: absolute;
+    width: 430px;
+    height: 430px;
     background:
-      rgb(255 255 255 / 72%);
-
-    border:
-      1px solid
-      rgb(255 255 255 / 85%);
-
-    border-radius: 30px;
-
-    box-shadow:
-      0 35px 80px
-      rgb(23 50 77 / 22%);
-
-    backdrop-filter:
-      blur(12px);
+      radial-gradient(
+        circle,
+        rgb(238 194 164 / 38%),
+        transparent 67%
+      );
+    border-radius: 50%;
+    filter: blur(15px);
   }
 
-  .cover-frame img {
+  .cover-card {
+    position: relative;
+    z-index: 2;
+    width: min(390px, 82%);
+    padding: 1.3rem;
+    background: rgb(255 255 255 / 74%);
+    border: 1px solid rgb(255 255 255 / 88%);
+    border-radius: 30px;
+    box-shadow:
+      0 38px 85px
+      rgb(23 50 77 / 23%);
+    backdrop-filter: blur(14px);
+    transform: rotate(1deg);
+  }
+
+  .cover-card img {
     display: block;
-
     width: 100%;
-
     border-radius: 18px;
   }
 
-  .floating-card {
+  .floating-info {
     position: absolute;
-
     z-index: 3;
-
     display: grid;
-
-    min-width: 170px;
-
+    min-width: 175px;
     padding: 1rem;
-
     background: #fff;
-
-    border:
-      1px solid
-      #dfe9ef;
-
+    border: 1px solid #dfe9ef;
     border-radius: 15px;
-
     box-shadow:
-      0 15px 35px
-      rgb(23 50 77 / 13%);
+      0 16px 38px
+      rgb(23 50 77 / 14%);
   }
 
-  .floating-card span {
+  .floating-info span {
     margin-top: 0.25rem;
-
     color: #60758a;
-
     font-size: 0.75rem;
   }
 
-  .card-one {
-    top: 15%;
+  .info-top {
+    top: 14%;
     left: 0;
   }
 
-  .card-two {
+  .info-bottom {
     right: 0;
-    bottom: 16%;
+    bottom: 14%;
   }
 
-  .trust-strip {
+  .trust-bar {
     display: grid;
-
     grid-template-columns:
-      repeat(3, 1fr);
-
+      repeat(4, 1fr);
     width: min(1180px, 92%);
-
-    margin:
-      -2.2rem
-      auto
-      0;
-
-    padding: 1.2rem;
-
-    gap: 1rem;
-
+    margin: -2.5rem auto 0;
+    padding: 1.1rem;
+    gap: 0.65rem;
     background: #fff;
-
-    border:
-      1px solid
-      #dfe9ef;
-
-    border-radius: 20px;
-
+    border: 1px solid #dfe9ef;
+    border-radius: 21px;
     box-shadow:
-      0 20px 50px
-      rgb(23 50 77 / 9%);
+      0 22px 55px
+      rgb(23 50 77 / 10%);
   }
 
-  .trust-strip article {
+  .trust-bar article {
     display: flex;
-
     padding: 1rem;
-
     align-items: flex-start;
-
-    gap: 0.8rem;
+    gap: 0.75rem;
   }
 
-  .trust-strip article > span {
-    font-size: 1.5rem;
+  .trust-icon {
+    font-size: 1.45rem;
   }
 
-  .trust-strip strong {
+  .trust-bar strong {
     display: block;
+    font-size: 0.92rem;
   }
 
-  .trust-strip p {
-    margin:
-      0.35rem
-      0
-      0;
-
+  .trust-bar p {
+    margin: 0.35rem 0 0;
     color: #60758a;
-
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     line-height: 1.5;
   }
 
   .section {
     padding:
-      6rem
+      6.5rem
       max(6%, calc((100% - 1180px) / 2));
   }
 
   .section-heading {
-    max-width: 760px;
-
-    margin-bottom: 3rem;
+    max-width: 790px;
+    margin-bottom: 3.2rem;
   }
 
   .section-heading.centered {
-    margin:
-      0
-      auto
-      3rem;
-
+    margin: 0 auto 3.2rem;
     text-align: center;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    color: #0f7d83;
+    font-size: 0.75rem;
+    font-weight: 850;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow.light {
+    color: #8ed4d0;
   }
 
   .section-heading h2,
   .content-copy h2,
-  .faq-layout h2,
+  .faq-intro h2,
   .final-cta h2 {
-    margin:
-      0.7rem
-      0
-      1rem;
-
+    margin: 0.75rem 0 1rem;
     font:
-      clamp(
-        2.3rem,
-        4vw,
-        4rem
-      ) / 1.05
+      clamp(2.35rem, 4.3vw, 4.15rem) / 1.04
       Georgia,
       serif;
   }
 
   .section-heading p,
   .content-copy > p,
-  .faq-layout > div:first-child > p,
+  .faq-intro p,
   .final-cta p {
     color: #60758a;
-
     line-height: 1.8;
   }
 
-  .benefit-grid {
+  .benefits-grid {
     display: grid;
-
     grid-template-columns:
       repeat(3, 1fr);
-
     gap: 1.3rem;
   }
 
-  .benefit-grid article {
-    padding: 1.8rem;
-
+  .benefits-grid article {
+    padding: 1.85rem;
     background: #fff;
-
-    border:
-      1px solid
-      #e1eaf0;
-
-    border-radius: 18px;
-
+    border: 1px solid #e1eaf0;
+    border-radius: 19px;
     box-shadow:
-      0 14px 38px
+      0 15px 40px
       rgb(23 50 77 / 7%);
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
   }
 
-  .benefit-grid article > span {
+  .benefits-grid article:hover {
+    transform: translateY(-5px);
+    box-shadow:
+      0 22px 50px
+      rgb(23 50 77 / 11%);
+  }
+
+  .benefits-grid article > span {
     font-size: 2rem;
   }
 
-  .benefit-grid h3 {
-    margin:
-      1rem
-      0
-      0.7rem;
+  .benefits-grid h3 {
+    margin: 1rem 0 0.7rem;
   }
 
-  .benefit-grid p {
+  .benefits-grid p {
     margin: 0;
-
     color: #60758a;
-
     line-height: 1.7;
   }
 
@@ -1219,16 +1348,13 @@ const product = {
     background: #17324d;
   }
 
-  .content-panel {
+  .content-layout {
     display: grid;
-
     grid-template-columns:
-      1.2fr
-      0.8fr;
-
+      1.25fr
+      0.75fr;
     align-items: start;
-
-    gap: 4rem;
+    gap: 4.5rem;
   }
 
   .content-copy h2 {
@@ -1239,155 +1365,139 @@ const product = {
     color: #c1d0dc;
   }
 
-  .content-list {
+  .content-columns {
     display: grid;
+    grid-template-columns:
+      1fr
+      1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
 
-    margin:
-      2rem
-      0
-      0;
-
+  .content-columns ul {
+    display: grid;
+    margin: 0;
     padding: 0;
-
-    gap: 0.8rem;
-
+    gap: 0.75rem;
     list-style: none;
   }
 
-  .content-list li {
+  .content-columns li {
     position: relative;
-
-    padding-left: 1.6rem;
-
-    color: #d9e4ec;
-
+    padding-left: 1.5rem;
+    color: #dae5ed;
     line-height: 1.6;
   }
 
-  .content-list li::before {
+  .content-columns li::before {
     position: absolute;
-
     left: 0;
-
-    color: #6fc0bd;
-
+    color: #75c9c5;
     content: "✓";
   }
 
-  .summary-card {
+  .product-summary {
     padding: 2rem;
-
     background: #fff;
-
-    border-radius: 22px;
-
+    border-radius: 23px;
     box-shadow:
-      0 25px 60px
-      rgb(0 0 0 / 20%);
+      0 28px 65px
+      rgb(0 0 0 / 22%);
   }
 
-  .summary-label {
+  .summary-title {
     color: #0f7d83;
-
     font-size: 0.72rem;
     font-weight: 850;
-
-    letter-spacing: 0.12em;
+    letter-spacing: 0.13em;
   }
 
-  .summary-card dl {
+  .product-summary dl {
     display: grid;
-
-    margin:
-      1.5rem
-      0;
-
-    gap: 0;
+    margin: 1.4rem 0;
   }
 
-  .summary-card dl div {
+  .product-summary dl div {
     display: grid;
-
     grid-template-columns:
       0.8fr
       1.2fr;
-
-    padding:
-      0.9rem
-      0;
-
+    padding: 0.85rem 0;
     gap: 1rem;
-
-    border-bottom:
-      1px solid
-      #e7edf2;
+    border-bottom: 1px solid #e7edf2;
   }
 
-  .summary-card dt {
+  .product-summary dt {
     color: #60758a;
-
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
-  .summary-card dd {
+  .product-summary dd {
     margin: 0;
-
     text-align: right;
-
-    font-size: 0.86rem;
+    font-size: 0.84rem;
     font-weight: 750;
   }
 
-  .secondary-buy {
+  .summary-buy {
     width: 100%;
+  }
+
+  .process-section {
+    background: #f7fafb;
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns:
+      repeat(3, 1fr);
+    gap: 1.3rem;
+  }
+
+  .steps-grid article {
+    position: relative;
+    padding: 2rem;
+    background: #fff;
+    border: 1px solid #e0e9ee;
+    border-radius: 19px;
+  }
+
+  .steps-grid article > span,
+  .audience-grid article > span {
+    color: #0f7d83;
+    font-size: 1.55rem;
+    font-weight: 900;
+  }
+
+  .steps-grid h3,
+  .audience-grid h3 {
+    margin: 1rem 0 0.65rem;
+  }
+
+  .steps-grid p,
+  .audience-grid p {
+    margin: 0;
+    color: #60758a;
+    line-height: 1.7;
   }
 
   .audience-grid {
     display: grid;
-
     grid-template-columns:
       repeat(4, 1fr);
-
     gap: 1.2rem;
   }
 
   .audience-grid article {
     padding: 1.8rem;
-
     background:
       linear-gradient(
         145deg,
-        #f4fbfa,
-        #f8fafc
+        #f3fbfa,
+        #faf8f5
       );
-
-    border:
-      1px solid
-      #dce8ec;
-
-    border-radius: 18px;
-  }
-
-  .audience-grid article > span {
-    color: #0f7d83;
-
-    font-size: 1.6rem;
-    font-weight: 900;
-  }
-
-  .audience-grid h3 {
-    margin:
-      1rem
-      0
-      0.6rem;
-  }
-
-  .audience-grid p {
-    margin: 0;
-
-    color: #60758a;
-
-    line-height: 1.7;
+    border: 1px solid #dce8ec;
+    border-radius: 19px;
   }
 
   .faq-section {
@@ -1396,11 +1506,9 @@ const product = {
 
   .faq-layout {
     display: grid;
-
     grid-template-columns:
       0.85fr
       1.15fr;
-
     gap: 5rem;
   }
 
@@ -1411,140 +1519,140 @@ const product = {
 
   details {
     padding: 1.2rem;
-
     background: #fff;
-
-    border:
-      1px solid
-      #dde7ed;
-
+    border: 1px solid #dde7ed;
     border-radius: 14px;
   }
 
   summary {
     font-weight: 800;
-
     cursor: pointer;
   }
 
   details p {
-    margin:
-      0.9rem
-      0
-      0;
-
+    margin: 0.9rem 0 0;
     color: #60758a;
-
     line-height: 1.7;
   }
 
   .final-cta {
     display: flex;
-
     margin:
       0
       max(6%, calc((100% - 1180px) / 2))
       6rem;
-
     padding: 3.5rem;
-
     align-items: center;
     justify-content: space-between;
-
     gap: 3rem;
-
     color: #fff;
-
     background:
       linear-gradient(
         135deg,
         #0f7d83,
         #17324d
       );
-
-    border-radius: 28px;
+    border-radius: 29px;
   }
 
   .final-cta h2 {
-    max-width: 720px;
-
+    max-width: 730px;
     color: #fff;
   }
 
   .final-cta p {
-    max-width: 700px;
-
+    max-width: 680px;
     color: #d5e6e7;
   }
 
-  .final-price {
+  .final-purchase {
     display: grid;
-
-    min-width: 245px;
-
+    min-width: 250px;
     gap: 1rem;
   }
 
-  .final-price > span {
+  .final-purchase > strong {
     text-align: center;
-
     font-size: 2rem;
-    font-weight: 900;
   }
 
-  .final-price .buy-button {
+  .final-buy {
     background: #fff;
     color: #17324d;
   }
 
   footer {
     display: flex;
-
     padding:
       2rem
       max(6%, calc((100% - 1180px) / 2));
-
     align-items: center;
     justify-content: space-between;
-
     gap: 2rem;
-
-    border-top:
-      1px solid
-      #e2eaf0;
+    border-top: 1px solid #e2eaf0;
   }
 
   footer p {
     margin: 0;
-
     color: #60758a;
-
-    font-size: 0.85rem;
+    font-size: 0.84rem;
   }
 
-  @media (max-width: 1000px) {
+  .mobile-buy-bar {
+    display: none;
+  }
+
+  .notice {
+    position: fixed;
+    right: 1.4rem;
+    bottom: 1.4rem;
+    z-index: 100;
+    max-width: min(380px, calc(100% - 2.8rem));
+    padding: 1rem 1.15rem;
+    color: #fff;
+    background: #17324d;
+    border-radius: 13px;
+    box-shadow:
+      0 18px 45px
+      rgb(23 50 77 / 24%);
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .notice.success {
+    background: #08765c;
+  }
+
+  .notice.error {
+    background: #a92d3d;
+  }
+
+  @media (max-width: 1020px) {
     .main-nav {
       display: none;
     }
 
     .hero {
-      grid-template-columns:
-        1fr;
+      grid-template-columns: 1fr;
     }
 
     .hero-visual {
-      min-height: 500px;
+      min-height: 530px;
     }
 
-    .benefit-grid {
+    .trust-bar {
       grid-template-columns:
         repeat(2, 1fr);
     }
 
-    .content-panel,
-    .faq-layout {
+    .benefits-grid {
       grid-template-columns:
-        1fr;
+        repeat(2, 1fr);
+    }
+
+    .content-layout,
+    .faq-layout {
+      grid-template-columns: 1fr;
     }
 
     .audience-grid {
@@ -1553,26 +1661,37 @@ const product = {
     }
   }
 
-  @media (max-width: 700px) {
-    .brand-copy {
+  @media (max-width: 720px) {
+    body {
+      padding-bottom: 78px;
+    }
+
+    .brand-copy,
+    .header-buy {
       display: none;
+    }
+
+    .library-link {
+      padding: 0.65rem;
+      font-size: 0.82rem;
     }
 
     .hero {
       min-height: auto;
-
-      padding-top: 4rem;
+      padding-top: 3.8rem;
       padding-bottom: 4rem;
     }
 
-    .price-row,
-    .final-cta,
-    footer {
+    h1 {
+      font-size: clamp(3.2rem, 17vw, 4.8rem);
+    }
+
+    .purchase-card {
       align-items: stretch;
       flex-direction: column;
     }
 
-    .buy-button {
+    .primary-buy {
       width: 100%;
     }
 
@@ -1580,40 +1699,95 @@ const product = {
       min-height: 430px;
     }
 
-    .floating-card {
+    .floating-info {
       display: none;
     }
 
-    .trust-strip,
-    .benefit-grid,
-    .audience-grid {
-      grid-template-columns:
-        1fr;
+    .trust-bar,
+    .benefits-grid,
+    .steps-grid,
+    .audience-grid,
+    .content-columns {
+      grid-template-columns: 1fr;
     }
 
-    .trust-strip {
-      margin-top: 1.5rem;
+    .trust-bar {
+      margin-top: 1.4rem;
     }
 
-    .summary-card dl div {
-      grid-template-columns:
-        1fr;
+    .product-summary dl div {
+      grid-template-columns: 1fr;
     }
 
-    .summary-card dd {
+    .product-summary dd {
       text-align: left;
+    }
+
+    .final-cta,
+    footer {
+      align-items: stretch;
+      flex-direction: column;
     }
 
     .final-cta {
       padding: 2rem;
     }
 
-    .final-price {
+    .final-purchase {
       min-width: 0;
     }
 
     footer {
       text-align: center;
+    }
+
+    .mobile-buy-bar {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 90;
+      display: flex;
+      min-height: 72px;
+      padding:
+        0.75rem
+        1rem;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: rgb(255 255 255 / 96%);
+      border-top: 1px solid #dce5eb;
+      box-shadow:
+        0 -12px 35px
+        rgb(23 50 77 / 11%);
+      backdrop-filter: blur(14px);
+    }
+
+    .mobile-buy-bar div {
+      display: grid;
+    }
+
+    .mobile-buy-bar span {
+      color: #60758a;
+      font-size: 0.72rem;
+    }
+
+    .mobile-buy-bar strong {
+      font-size: 1.1rem;
+    }
+
+    .mobile-buy-bar button {
+      min-height: 44px;
+      padding: 0.7rem 1rem;
+      color: #fff;
+      background: #0f7d83;
+      border: 0;
+      border-radius: 10px;
+      font-weight: 850;
+    }
+
+    .notice {
+      bottom: 5.8rem;
     }
   }
 </style>
