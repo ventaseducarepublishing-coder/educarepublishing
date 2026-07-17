@@ -8,6 +8,7 @@ const ebooks = [
       "Guía práctica para acompañar los primeros días del recién nacido con información clara y educativa.",
     precio: "$50.000",
     portada: "/portadas/primer-ano-bebe.png",
+    url: "/ebook/primer-ano-bebe/",
   },
   {
     id: "sopas_caseras",
@@ -17,6 +18,7 @@ const ebooks = [
       "Una selección de recetas tradicionales, nutritivas y reconfortantes para disfrutar en familia.",
     precio: "$29.990",
     portada: "/portadas/sopas-del-mundo.png",
+    url: "/ebook/sopas-del-mundo/",
   },
   {
     id: "lactancia_materna",
@@ -26,6 +28,7 @@ const ebooks = [
       "Orientaciones prácticas sobre posiciones, agarre, extracción, conservación y cuidados.",
     precio: "$50.000",
     portada: "/portadas/lactancia-materna.png",
+    url: "/ebook/lactancia-materna/",
   },
 ];
 ---
@@ -153,30 +156,45 @@ const ebooks = [
           {
             ebooks.map((ebook) => (
               <article class="ebook-card">
-                <div class="ebook-cover">
+                <a
+                  class="ebook-cover"
+                  href={ebook.url}
+                  aria-label={`Ver detalles de ${ebook.titulo}`}
+                >
                   <img
                     src={ebook.portada}
                     alt={`Portada del ebook ${ebook.titulo}`}
                     loading="lazy"
                     decoding="async"
                   />
-                </div>
+                </a>
 
                 <div class="ebook-information">
                   <span class="category">{ebook.categoria}</span>
-                  <h3>{ebook.titulo}</h3>
+                  <h3>
+                    <a href={ebook.url}>{ebook.titulo}</a>
+                  </h3>
                   <p>{ebook.descripcion}</p>
 
                   <div class="ebook-footer">
                     <strong>{ebook.precio}</strong>
 
-                    <button
-                      type="button"
-                      class="buy-button"
-                      data-product-id={ebook.id}
-                    >
-                      Comprar ahora
-                    </button>
+                    <div class="ebook-actions">
+                      <a
+                        class="details-button"
+                        href={ebook.url}
+                      >
+                        Ver detalles
+                      </a>
+
+                      <button
+                        type="button"
+                        class="buy-button"
+                        data-product-id={ebook.id}
+                      >
+                        Comprar ahora
+                      </button>
+                    </div>
                   </div>
                 </div>
               </article>
@@ -766,6 +784,14 @@ const ebooks = [
     font-size: 1.25rem;
   }
 
+  .ebook-information h3 a {
+    transition: color 180ms ease;
+  }
+
+  .ebook-information h3 a:hover {
+    color: #0f7d83;
+  }
+
   .ebook-information p {
     min-height: 76px;
     color: #60758a;
@@ -783,23 +809,50 @@ const ebooks = [
   }
 
   .ebook-footer strong {
+    flex-shrink: 0;
     font-size: 1.15rem;
   }
 
+  .ebook-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .details-button,
   .buy-button {
     min-height: 42px;
     padding: 0.7rem 1rem;
-    color: #ffffff;
     font: inherit;
     font-weight: 800;
-    background: #0f7d83;
-    border: 0;
     border-radius: 10px;
-    cursor: pointer;
     transition:
       transform 180ms ease,
       background 180ms ease,
+      border-color 180ms ease,
       opacity 180ms ease;
+  }
+
+  .details-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #17324d;
+    background: #ffffff;
+    border: 1px solid #cad8e2;
+  }
+
+  .details-button:hover {
+    color: #0f7d83;
+    border-color: #0f7d83;
+    transform: translateY(-2px);
+  }
+
+  .buy-button {
+    color: #ffffff;
+    background: #0f7d83;
+    border: 0;
+    cursor: pointer;
   }
 
   .buy-button:hover:not(:disabled) {
@@ -1008,6 +1061,13 @@ const ebooks = [
       flex-direction: column;
     }
 
+    .ebook-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+    }
+
+    .details-button,
     .buy-button {
       width: 100%;
     }
