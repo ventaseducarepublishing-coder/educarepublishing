@@ -1,36 +1,4 @@
 ---
-const ebooks = [
-  {
-    id: "recien_nacido",
-    titulo: "Guía Completa del Primer Año del Bebé",
-    categoria: "Salud y familia",
-    descripcion:
-      "Guía práctica para acompañar los primeros días del recién nacido con información clara y educativa.",
-    precio: "$50.000",
-    portada: "/portadas/primer-ano-bebe.png",
-    url: "/ebook/primer-ano-bebe/",
-  },
-  {
-    id: "sopas_caseras",
-    titulo: "Las Mejores Sopas del Mundo",
-    categoria: "Cocina",
-    descripcion:
-      "Una selección de recetas tradicionales, nutritivas y reconfortantes para disfrutar en familia.",
-    precio: "$29.990",
-    portada: "/portadas/sopas-del-mundo.png",
-    url: "/ebook/sopas-del-mundo/",
-  },
-  {
-    id: "lactancia_materna",
-    titulo: "Lactancia Materna",
-    categoria: "Maternidad",
-    descripcion:
-      "Orientaciones prácticas sobre posiciones, agarre, extracción, conservación y cuidados.",
-    precio: "$50.000",
-    portada: "/portadas/lactancia-materna.png",
-    url: "/ebook/lactancia-materna/",
-  },
-];
 ---
 
 <!doctype html>
@@ -152,54 +120,11 @@ const ebooks = [
           </p>
         </div>
 
-        <div class="ebook-grid">
-          {
-            ebooks.map((ebook) => (
-              <article class="ebook-card">
-                <a
-                  class="ebook-cover"
-                  href={ebook.url}
-                  aria-label={`Ver detalles de ${ebook.titulo}`}
-                >
-                  <img
-                    src={ebook.portada}
-                    alt={`Portada del ebook ${ebook.titulo}`}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </a>
-
-                <div class="ebook-information">
-                  <span class="category">{ebook.categoria}</span>
-                  <h3>
-                    <a href={ebook.url}>{ebook.titulo}</a>
-                  </h3>
-                  <p>{ebook.descripcion}</p>
-
-                  <div class="ebook-footer">
-                    <strong>{ebook.precio}</strong>
-
-                    <div class="ebook-actions">
-                      <a
-                        class="details-button"
-                        href={ebook.url}
-                      >
-                        Ver detalles
-                      </a>
-
-                      <button
-                        type="button"
-                        class="buy-button"
-                        data-product-id={ebook.id}
-                      >
-                        Comprar ahora
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))
-          }
+        <div class="ebook-grid" id="ebook-grid">
+          <div class="catalog-loading">
+            <div class="catalog-loader"></div>
+            <strong>Cargando ebooks...</strong>
+          </div>
         </div>
       </section>
 
@@ -299,8 +224,28 @@ const ebooks = [
     <script>
       import { supabase } from "../lib/supabase";
 
+      type CategoryRelation =
+        | { name: string }
+        | { name: string }[]
+        | null;
+
+      type EbookRow = {
+        id: string;
+        legacy_product_id: string;
+        slug: string;
+        title: string;
+        description: string;
+        price: number;
+        currency: string;
+        cover_url: string | null;
+        published: boolean;
+        category: CategoryRelation;
+      };
+
       const loginLink =
         document.querySelector<HTMLAnchorElement>("#login-link");
+      const ebookGrid =
+        document.querySelector<HTMLDivElement>("#ebook-grid");
 
       const {
         data: { session },
@@ -317,38 +262,174 @@ const ebooks = [
         });
       }
 
-      const pendingProduct =
-        new URLSearchParams(window.location.search).get("buy");
-
-      if (pendingProduct && session) {
-        history.replaceState({}, "", "/#ebooks");
-        await startCheckout(pendingProduct);
+      function escapeHtml(value: string) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
       }
 
-      document
-        .querySelectorAll<HTMLButtonElement>(".buy-button")
-        .forEach((button) => {
-          button.addEventListener("click", async () => {
-            const productId = button.dataset.productId;
+      function getCategoryName(category: CategoryRelation) {
+        if (!category) return "Sin categoría";
+        if (Array.isArray(category)) {
+          return category[0]?.name ?? "Sin categoría";
+        }
+        return category.name;
+      }
 
-            if (!productId) {
-              alert("No se pudo identificar el ebook.");
-              return;
-            }
+      function formatPrice(value: number, currency = "CLP") {
+        return new Intl.NumberFormat("es-CL", {
+          style: "currency",
+          currency,
+          maximumFractionDigits: 0,
+        }).format(Number(value || 0));
+      }
 
-            const {
-              data: { session: currentSession },
-            } = await supabase.auth.getSession();
+      function renderCatalog(ebooks: EbookRow[]) {
+        if (!ebookGrid) return;
 
-            if (!currentSession) {
-              window.location.href =
-                `/registro?product=${encodeURIComponent(productId)}`;
-              return;
-            }
+        if (ebooks.length === 0) {
+          ebookGrid.innerHTML = `
+            <div class="catalog-empty">
+              <strong>Aún no hay ebooks publicados.</strong>
+              <p>Muy pronto encontrarás nuevos contenidos digitales.</p>
+            </div>
+          `;
+          return;
+        }
 
-            await startCheckout(productId, button);
+        ebookGrid.innerHTML = ebooks
+          .map((ebook) => {
+            const title = escapeHtml(ebook.title);
+            const description = escapeHtml(
+              ebook.description || "Contenido digital de Educare Publishing."
+            );
+            const category = escapeHtml(getCategoryName(ebook.category));
+            const slug = encodeURIComponent(ebook.slug);
+            const productId = escapeHtml(
+              ebook.legacy_product_id || ebook.slug
+            );
+            const cover = ebook.cover_url
+              ? escapeHtml(ebook.cover_url)
+              : "";
+
+            return `
+              <article class="ebook-card">
+                <a
+                  class="ebook-cover"
+                  href="/ebook/${slug}/"
+                  aria-label="Ver detalles de ${title}"
+                >
+                  ${
+                    cover
+                      ? `<img
+                          src="${cover}"
+                          alt="Portada del ebook ${title}"
+                          loading="lazy"
+                          decoding="async"
+                        />`
+                      : `<span class="ebook-cover-placeholder">EP</span>`
+                  }
+                </a>
+
+                <div class="ebook-information">
+                  <span class="category">${category}</span>
+                  <h3><a href="/ebook/${slug}/">${title}</a></h3>
+                  <p>${description}</p>
+
+                  <div class="ebook-footer">
+                    <strong>${formatPrice(
+                      Number(ebook.price),
+                      ebook.currency || "CLP"
+                    )}</strong>
+
+                    <div class="ebook-actions">
+                      <a class="details-button" href="/ebook/${slug}/">
+                        Ver detalles
+                      </a>
+
+                      <button
+                        type="button"
+                        class="buy-button"
+                        data-product-id="${productId}"
+                      >
+                        Comprar ahora
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+
+        bindBuyButtons();
+      }
+
+      async function loadCatalog() {
+        if (!ebookGrid) return;
+
+        const { data, error } = await supabase
+          .from("ebooks")
+          .select(`
+            id,
+            legacy_product_id,
+            slug,
+            title,
+            description,
+            price,
+            currency,
+            cover_url,
+            published,
+            category:categories(name)
+          `)
+          .eq("published", true)
+          .order("display_order", { ascending: true })
+          .order("published_at", { ascending: false });
+
+        if (error) {
+          console.error("No se pudo cargar el catálogo:", error);
+
+          ebookGrid.innerHTML = `
+            <div class="catalog-error">
+              <strong>No pudimos cargar los ebooks.</strong>
+              <p>Recarga la página en unos minutos.</p>
+            </div>
+          `;
+          return;
+        }
+
+        renderCatalog((data ?? []) as EbookRow[]);
+      }
+
+      function bindBuyButtons() {
+        document
+          .querySelectorAll<HTMLButtonElement>(".buy-button")
+          .forEach((button) => {
+            button.addEventListener("click", async () => {
+              const productId = button.dataset.productId;
+
+              if (!productId) {
+                alert("No se pudo identificar el ebook.");
+                return;
+              }
+
+              const {
+                data: { session: currentSession },
+              } = await supabase.auth.getSession();
+
+              if (!currentSession) {
+                window.location.href =
+                  `/registro?product=${encodeURIComponent(productId)}`;
+                return;
+              }
+
+              await startCheckout(productId, button);
+            });
           });
-        });
+      }
 
       async function startCheckout(
         productId: string,
@@ -373,18 +454,14 @@ const ebooks = [
             return;
           }
 
-          const response = await fetch(
-            "/api/create-preference",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization:
-                  `Bearer ${currentSession.access_token}`,
-              },
-              body: JSON.stringify({ productId }),
-            }
-          );
+          const response = await fetch("/api/create-preference", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${currentSession.access_token}`,
+            },
+            body: JSON.stringify({ productId }),
+          });
 
           const data = await response.json();
 
@@ -420,6 +497,16 @@ const ebooks = [
             button.textContent = originalText;
           }
         }
+      }
+
+      await loadCatalog();
+
+      const pendingProduct =
+        new URLSearchParams(window.location.search).get("buy");
+
+      if (pendingProduct && session) {
+        history.replaceState({}, "", "/#ebooks");
+        await startCheckout(pendingProduct);
       }
     </script>
   </body>
@@ -728,6 +815,56 @@ const ebooks = [
     margin-bottom: 0;
     color: #60758a;
     line-height: 1.7;
+  }
+
+
+  .catalog-loading,
+  .catalog-empty,
+  .catalog-error {
+    grid-column: 1 / -1;
+    min-height: 260px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 0.8rem;
+    padding: 2rem;
+    color: #60758a;
+    text-align: center;
+    background: #f8fafc;
+    border: 1px solid #e2eaf0;
+    border-radius: 20px;
+  }
+
+  .catalog-loading p,
+  .catalog-empty p,
+  .catalog-error p {
+    margin: 0;
+  }
+
+  .catalog-loader {
+    width: 42px;
+    height: 42px;
+    border: 4px solid #d7e7ea;
+    border-top-color: #0f7d83;
+    border-radius: 50%;
+    animation: catalog-spin 0.8s linear infinite;
+  }
+
+  @keyframes catalog-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .ebook-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    background: linear-gradient(145deg, #0f7d83, #17324d);
+    font-size: 2rem;
+    font-weight: 900;
   }
 
   .ebook-grid {
