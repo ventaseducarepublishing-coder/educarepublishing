@@ -1,0 +1,733 @@
+---
+export const prerender = false;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Descubre este ebook de Educare Publishing."
+    />
+    <title>Ebook | Educare Publishing</title>
+  </head>
+
+  <body>
+    <header class="header">
+      <a class="brand" href="/">
+        <span class="brand-icon">EP</span>
+        <span>
+          <strong>Educare</strong>
+          <small>Publishing</small>
+        </span>
+      </a>
+
+      <nav aria-label="Navegación principal">
+        <a href="/">Inicio</a>
+        <a href="/#ebooks">Ebooks</a>
+        <a href="/#categorias">Categorías</a>
+        <a href="/#nosotros">Nosotros</a>
+        <a href="/#contacto">Contacto</a>
+      </nav>
+
+      <div class="account-actions">
+        <a id="login-link" class="account-link" href="/login">Ingresar</a>
+        <a class="library-button" href="/mi-biblioteca">Mi biblioteca</a>
+      </div>
+    </header>
+
+    <main>
+      <section id="loading-state" class="state-panel">
+        <div class="loader"></div>
+        <strong>Cargando ebook...</strong>
+      </section>
+
+      <section id="error-state" class="state-panel" hidden>
+        <span class="state-icon">!</span>
+        <h1>No encontramos este ebook</h1>
+        <p id="error-message">
+          El enlace puede haber cambiado o el ebook ya no está publicado.
+        </p>
+        <a class="primary-button" href="/#ebooks">Volver al catálogo</a>
+      </section>
+
+      <article id="ebook-page" class="ebook-page" hidden>
+        <div class="breadcrumb">
+          <a href="/">Inicio</a>
+          <span>›</span>
+          <a href="/#ebooks">Ebooks</a>
+          <span>›</span>
+          <span id="breadcrumb-title">Ebook</span>
+        </div>
+
+        <section class="product-hero">
+          <div class="cover-column">
+            <div class="cover-frame">
+              <img id="cover-image" alt="" />
+              <span id="cover-placeholder" class="cover-placeholder" hidden>EP</span>
+            </div>
+
+            <div class="trust-list">
+              <span>✓ Compra segura</span>
+              <span>✓ Acceso desde tu biblioteca</span>
+              <span>✓ Descarga digital</span>
+            </div>
+          </div>
+
+          <div class="product-content">
+            <span id="category" class="category">EBOOK</span>
+            <h1 id="title">Ebook</h1>
+            <p id="subtitle" class="subtitle" hidden></p>
+            <p id="author" class="author" hidden></p>
+
+            <div class="summary-card">
+              <p id="description"></p>
+            </div>
+
+            <div class="product-meta">
+              <div>
+                <span>Formato</span>
+                <strong id="format">PDF</strong>
+              </div>
+              <div>
+                <span>Idioma</span>
+                <strong id="language">Español</strong>
+              </div>
+              <div id="pages-meta">
+                <span>Páginas</span>
+                <strong id="page-count">—</strong>
+              </div>
+            </div>
+
+            <div class="purchase-card">
+              <div>
+                <span class="price-label">Precio</span>
+                <strong id="price" class="price">$0</strong>
+              </div>
+
+              <button id="buy-button" class="buy-button" type="button">
+                Comprar ahora
+              </button>
+
+              <small>Pago procesado de forma segura mediante Mercado Pago.</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="details-section">
+          <div class="details-main">
+            <span class="eyebrow">DESCRIPCIÓN</span>
+            <h2>Acerca de este ebook</h2>
+            <div id="long-description" class="long-description"></div>
+          </div>
+
+          <aside class="publisher-card">
+            <span class="brand-icon">EP</span>
+            <div>
+              <strong>Educare Publishing</strong>
+              <p>
+                Contenidos digitales prácticos para aprender, enseñar y crecer.
+              </p>
+            </div>
+          </aside>
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      <a class="brand" href="/">
+        <span class="brand-icon">EP</span>
+        <span>
+          <strong>Educare</strong>
+          <small>Publishing</small>
+        </span>
+      </a>
+      <p>© 2026 Educare Publishing. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+      import { supabase } from "../../lib/supabase";
+
+      type Relation = { name: string } | { name: string }[] | null;
+
+      type Ebook = {
+        id: string;
+        legacy_product_id: string | null;
+        slug: string;
+        title: string;
+        short_title: string | null;
+        subtitle: string | null;
+        description: string | null;
+        long_description: string | null;
+        price: number;
+        currency: string | null;
+        cover_url: string | null;
+        page_count: number | null;
+        format: string | null;
+        language: string | null;
+        published: boolean;
+        seo_title: string | null;
+        seo_description: string | null;
+        category: Relation;
+        author: Relation;
+      };
+
+      const loadingState = document.querySelector<HTMLElement>("#loading-state");
+      const errorState = document.querySelector<HTMLElement>("#error-state");
+      const ebookPage = document.querySelector<HTMLElement>("#ebook-page");
+      const errorMessage = document.querySelector<HTMLElement>("#error-message");
+      const loginLink = document.querySelector<HTMLAnchorElement>("#login-link");
+      const buyButton = document.querySelector<HTMLButtonElement>("#buy-button");
+
+      let currentEbook: Ebook | null = null;
+
+      function getSlugFromPath() {
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        return decodeURIComponent(parts.at(-1) ?? "");
+      }
+
+      function relationName(relation: Relation, fallback: string) {
+        if (!relation) return fallback;
+        if (Array.isArray(relation)) return relation[0]?.name ?? fallback;
+        return relation.name ?? fallback;
+      }
+
+      function formatPrice(value: number, currency = "CLP") {
+        return new Intl.NumberFormat("es-CL", {
+          style: "currency",
+          currency,
+          maximumFractionDigits: 0,
+        }).format(Number(value || 0));
+      }
+
+      function setText(selector: string, value: string) {
+        const element = document.querySelector<HTMLElement>(selector);
+        if (element) element.textContent = value;
+      }
+
+      function showError(message: string) {
+        if (loadingState) loadingState.hidden = true;
+        if (ebookPage) ebookPage.hidden = true;
+        if (errorState) errorState.hidden = false;
+        if (errorMessage) errorMessage.textContent = message;
+      }
+
+      function renderEbook(ebook: Ebook) {
+        currentEbook = ebook;
+
+        setText("#breadcrumb-title", ebook.short_title || ebook.title);
+        setText("#category", relationName(ebook.category, "EBOOK"));
+        setText("#title", ebook.title);
+        setText("#description", ebook.description || "Contenido digital de Educare Publishing.");
+        setText("#format", ebook.format || "PDF");
+        setText("#language", ebook.language || "Español");
+        setText("#price", formatPrice(Number(ebook.price), ebook.currency || "CLP"));
+
+        const subtitle = document.querySelector<HTMLElement>("#subtitle");
+        if (subtitle && ebook.subtitle) {
+          subtitle.textContent = ebook.subtitle;
+          subtitle.hidden = false;
+        }
+
+        const author = document.querySelector<HTMLElement>("#author");
+        const authorName = relationName(ebook.author, "");
+        if (author && authorName) {
+          author.textContent = `Por ${authorName}`;
+          author.hidden = false;
+        }
+
+        const pagesMeta = document.querySelector<HTMLElement>("#pages-meta");
+        if (ebook.page_count) {
+          setText("#page-count", String(ebook.page_count));
+        } else if (pagesMeta) {
+          pagesMeta.hidden = true;
+        }
+
+        const coverImage = document.querySelector<HTMLImageElement>("#cover-image");
+        const coverPlaceholder = document.querySelector<HTMLElement>("#cover-placeholder");
+
+        if (coverImage && ebook.cover_url) {
+          coverImage.src = ebook.cover_url;
+          coverImage.alt = `Portada del ebook ${ebook.title}`;
+          coverImage.hidden = false;
+          if (coverPlaceholder) coverPlaceholder.hidden = true;
+        } else {
+          if (coverImage) coverImage.hidden = true;
+          if (coverPlaceholder) coverPlaceholder.hidden = false;
+        }
+
+        const longDescription = document.querySelector<HTMLElement>("#long-description");
+        if (longDescription) {
+          const content =
+            ebook.long_description ||
+            ebook.description ||
+            "Contenido digital de Educare Publishing.";
+
+          longDescription.innerHTML = "";
+          content
+            .split(/\n{2,}/)
+            .map((paragraph) => paragraph.trim())
+            .filter(Boolean)
+            .forEach((paragraph) => {
+              const element = document.createElement("p");
+              element.textContent = paragraph;
+              longDescription.appendChild(element);
+            });
+        }
+
+        document.title =
+          ebook.seo_title || `${ebook.title} | Educare Publishing`;
+
+        const descriptionMeta =
+          document.querySelector<HTMLMetaElement>('meta[name="description"]');
+
+        if (descriptionMeta) {
+          descriptionMeta.content =
+            ebook.seo_description ||
+            ebook.description ||
+            "Ebook de Educare Publishing.";
+        }
+
+        if (loadingState) loadingState.hidden = true;
+        if (errorState) errorState.hidden = true;
+        if (ebookPage) ebookPage.hidden = false;
+      }
+
+      async function loadEbook() {
+        const slug = getSlugFromPath();
+
+        if (!slug || slug === "ebook") {
+          showError("La dirección del ebook no es válida.");
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("ebooks")
+          .select(`
+            id,
+            legacy_product_id,
+            slug,
+            title,
+            short_title,
+            subtitle,
+            description,
+            long_description,
+            price,
+            currency,
+            cover_url,
+            page_count,
+            format,
+            language,
+            published,
+            seo_title,
+            seo_description,
+            category:categories(name),
+            author:authors(name)
+          `)
+          .eq("slug", slug)
+          .eq("published", true)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error al cargar ebook:", error);
+          showError("No pudimos cargar este ebook. Intenta nuevamente.");
+          return;
+        }
+
+        if (!data) {
+          showError("El ebook solicitado no existe o todavía no está publicado.");
+          return;
+        }
+
+        renderEbook(data as Ebook);
+      }
+
+      async function startCheckout() {
+        if (!currentEbook || !buyButton) return;
+
+        const productId =
+          currentEbook.legacy_product_id || currentEbook.slug;
+        const originalText = buyButton.textContent || "Comprar ahora";
+
+        buyButton.disabled = true;
+        buyButton.textContent = "Preparando pago...";
+
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          if (!session) {
+            window.location.href =
+              `/registro?product=${encodeURIComponent(productId)}`;
+            return;
+          }
+
+          const response = await fetch("/api/create-preference", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ productId }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data?.error || "No se pudo iniciar el pago.");
+          }
+
+          const checkoutUrl = data.init_point || data.sandbox_init_point;
+
+          if (!checkoutUrl) {
+            throw new Error("Mercado Pago no devolvió el enlace de pago.");
+          }
+
+          window.location.href = checkoutUrl;
+        } catch (error) {
+          console.error(error);
+          alert(
+            error instanceof Error
+              ? error.message
+              : "Ocurrió un error al conectar con Mercado Pago."
+          );
+
+          buyButton.disabled = false;
+          buyButton.textContent = originalText;
+        }
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session && loginLink) {
+        loginLink.textContent = "Cerrar sesión";
+        loginLink.href = "#";
+
+        loginLink.addEventListener("click", async (event) => {
+          event.preventDefault();
+          await supabase.auth.signOut();
+          window.location.reload();
+        });
+      }
+
+      buyButton?.addEventListener("click", startCheckout);
+
+      await loadEbook();
+    </script>
+  </body>
+</html>
+
+<style>
+  :root {
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    color: #17324d;
+    background: #fff;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; }
+  [hidden] { display: none !important; }
+
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    min-height: 78px;
+    padding: 0 6%;
+    background: rgb(255 255 255 / 94%);
+    border-bottom: 1px solid #e6edf4;
+    backdrop-filter: blur(14px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+
+  .brand-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    color: #fff;
+    font-weight: 900;
+    background: linear-gradient(135deg, #0f7d83, #17456b);
+    border-radius: 12px;
+  }
+
+  .brand strong, .brand small { display: block; line-height: 1.05; }
+  .brand small {
+    margin-top: .18rem;
+    color: #60758a;
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 1.8rem;
+    color: #40566c;
+    font-weight: 700;
+  }
+
+  .account-actions {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+  }
+
+  .account-link { font-weight: 800; }
+
+  .library-button,
+  .primary-button,
+  .buy-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: .82rem 1.3rem;
+    color: #fff;
+    background: #0f7d83;
+    border: 0;
+    border-radius: 12px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  main { min-height: calc(100vh - 180px); }
+
+  .state-panel {
+    display: grid;
+    min-height: 65vh;
+    place-items: center;
+    align-content: center;
+    gap: 1rem;
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .loader {
+    width: 46px;
+    height: 46px;
+    border: 4px solid #d7e7ea;
+    border-top-color: #0f7d83;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .ebook-page { padding: 2rem 7% 6rem; }
+
+  .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .55rem;
+    margin-bottom: 2rem;
+    color: #6a7f90;
+    font-size: .88rem;
+  }
+
+  .product-hero {
+    display: grid;
+    grid-template-columns: minmax(280px, .82fr) minmax(0, 1.18fr);
+    align-items: start;
+    gap: clamp(2.5rem, 6vw, 6rem);
+    padding: clamp(2rem, 5vw, 4.5rem);
+    background:
+      radial-gradient(circle at 12% 12%, rgb(70 180 177 / 16%), transparent 28%),
+      linear-gradient(135deg, #f3fbfa 0%, #f8fafc 55%, #eef4f8 100%);
+    border: 1px solid #e0e9ee;
+    border-radius: 30px;
+  }
+
+  .cover-frame {
+    display: grid;
+    min-height: 530px;
+    place-items: center;
+    padding: 1.5rem;
+  }
+
+  .cover-frame img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 510px;
+    object-fit: contain;
+    border-radius: 9px;
+    box-shadow: 0 30px 65px rgb(23 50 77 / 24%);
+  }
+
+  .cover-placeholder {
+    display: grid;
+    width: min(100%, 330px);
+    aspect-ratio: 2 / 3;
+    place-items: center;
+    color: #fff;
+    background: linear-gradient(145deg, #0f7d83, #17324d);
+    border-radius: 9px;
+    font-size: 3rem;
+    font-weight: 900;
+  }
+
+  .trust-list {
+    display: grid;
+    gap: .65rem;
+    padding: 1.1rem 1.2rem;
+    color: #526b80;
+    background: rgb(255 255 255 / 74%);
+    border: 1px solid #dfe9ed;
+    border-radius: 16px;
+    font-weight: 700;
+  }
+
+  .category {
+    display: inline-flex;
+    padding: .45rem .72rem;
+    color: #0f7d83;
+    background: #e7f5f3;
+    border: 1px solid #cae8e5;
+    border-radius: 999px;
+    font-size: .74rem;
+    font-weight: 900;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .product-content h1 {
+    margin: 1rem 0;
+    font-family: Georgia, serif;
+    font-size: clamp(2.8rem, 6vw, 5.4rem);
+    line-height: .98;
+  }
+
+  .subtitle { color: #526b80; font-size: 1.2rem; line-height: 1.6; }
+  .author { color: #0f7d83; font-weight: 800; }
+
+  .summary-card {
+    margin: 1.6rem 0;
+    padding: 1.4rem;
+    background: #fff;
+    border: 1px solid #dfe8ee;
+    border-radius: 18px;
+  }
+
+  .summary-card p { margin: 0; color: #526b80; line-height: 1.75; }
+
+  .product-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .product-meta div {
+    padding: 1rem;
+    background: rgb(255 255 255 / 68%);
+    border: 1px solid #dfe8ee;
+    border-radius: 14px;
+  }
+
+  .product-meta span,
+  .price-label {
+    display: block;
+    margin-bottom: .35rem;
+    color: #718596;
+    font-size: .78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .purchase-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    padding: 1.5rem;
+    background: #17324d;
+    border-radius: 20px;
+  }
+
+  .price {
+    color: #fff;
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+  }
+
+  .purchase-card small {
+    grid-column: 1 / -1;
+    color: #c7d6df;
+  }
+
+  .details-section {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 3rem;
+    padding: 6rem 0;
+  }
+
+  .details-main h2 {
+    margin: .65rem 0 1.3rem;
+    font-family: Georgia, serif;
+    font-size: clamp(2.2rem, 4vw, 3.6rem);
+  }
+
+  .long-description p {
+    color: #526b80;
+    font-size: 1.02rem;
+    line-height: 1.85;
+  }
+
+  .publisher-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    align-self: start;
+    padding: 1.5rem;
+    background: #eff8f7;
+    border: 1px solid #d6ebe8;
+    border-radius: 20px;
+  }
+
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 2.4rem 7%;
+    color: #60758a;
+    border-top: 1px solid #e2eaf0;
+  }
+
+  @media (max-width: 960px) {
+    nav { display: none; }
+    .product-hero,
+    .details-section { grid-template-columns: 1fr; }
+    .cover-frame { min-height: auto; }
+  }
+
+  @media (max-width: 680px) {
+    .header { padding: 0 5%; }
+    .account-link { display: none; }
+    .ebook-page { padding: 1.5rem 5% 4rem; }
+    .product-hero { padding: 1.35rem; border-radius: 22px; }
+    .product-content h1 { font-size: 3rem; }
+    .product-meta,
+    .purchase-card { grid-template-columns: 1fr; }
+    footer { align-items: stretch; flex-direction: column; }
+  }
+</style>

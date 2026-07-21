@@ -1,26 +1,33 @@
----
----
-
 <!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
     <meta name="robots" content="noindex,nofollow" />
-    <title>Administración | Educare Publishing</title>
+
+    <title>
+      Administración | Educare Publishing
+    </title>
   </head>
 
   <body>
     <main class="card">
       <a class="brand" href="/">
         <span class="logo">EP</span>
-        <span>
+
+        <span class="brand-text">
           <strong>Educare Publishing</strong>
           <small>Panel de administración</small>
         </span>
       </a>
 
-      <div class="eyebrow">Acceso privado</div>
+      <div class="eyebrow">
+        Acceso privado
+      </div>
+
       <h1>Ingresar al panel</h1>
 
       <p class="intro">
@@ -30,6 +37,7 @@
       <form id="admin-login-form">
         <label>
           Correo electrónico
+
           <input
             id="email"
             type="email"
@@ -41,6 +49,7 @@
 
         <label>
           Contraseña
+
           <input
             id="password"
             type="password"
@@ -49,43 +58,63 @@
           />
         </label>
 
-        <button id="submit-button" type="submit">
+        <button
+          id="submit-button"
+          type="submit"
+        >
           Ingresar al panel
         </button>
 
-        <div id="message" class="message" role="status"></div>
+        <div
+          id="message"
+          class="message"
+          role="status"
+        ></div>
       </form>
 
       <p class="helper">
-        <a href="/recuperar-contrasena">Olvidé mi contraseña</a>
+        <a href="/recuperar-contrasena">
+          Olvidé mi contraseña
+        </a>
       </p>
 
       <p class="back">
-        <a href="/">← Volver a la tienda</a>
+        <a href="/">
+          ← Volver a la tienda
+        </a>
       </p>
     </main>
 
     <script>
       import { supabase } from "../../lib/supabase";
 
-      const redirect =
-        new URLSearchParams(window.location.search).get("redirect") ||
-        "/admin";
-
       const form =
-        document.querySelector<HTMLFormElement>("#admin-login-form");
+        document.querySelector<HTMLFormElement>(
+          "#admin-login-form"
+        );
 
       const button =
-        document.querySelector<HTMLButtonElement>("#submit-button");
+        document.querySelector<HTMLButtonElement>(
+          "#submit-button"
+        );
 
       const message =
-        document.querySelector<HTMLDivElement>("#message");
+        document.querySelector<HTMLDivElement>(
+          "#message"
+        );
+
+      const redirect =
+        new URLSearchParams(
+          window.location.search
+        ).get("redirect") || "/admin";
 
       function showMessage(
         text: string,
         type: "error" | "success" | ""
       ) {
-        if (!message) return;
+        if (!message) {
+          return;
+        }
 
         message.textContent = text;
         message.className = "message";
@@ -95,6 +124,30 @@
         }
       }
 
+      async function verifyAdministrator(
+        userId: string
+      ) {
+        const {
+          data,
+          error,
+        } = await supabase
+          .from("admin_users")
+          .select("user_id, email")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (error) {
+          console.error(
+            "Error verificando administrador:",
+            error
+          );
+
+          return null;
+        }
+
+        return data;
+      }
+
       async function checkExistingSession() {
         try {
           const {
@@ -102,121 +155,135 @@
             error,
           } = await supabase.auth.getSession();
 
-          if (error || !session?.user) {
+          if (error) {
+            console.error(
+              "Error obteniendo sesión:",
+              error
+            );
+
             return;
           }
 
-          const { data: adminRecord, error: adminError } =
-            await supabase
-              .from("admin_users")
-              .select("user_id")
-              .eq("user_id", session.user.id)
-              .maybeSingle();
+          if (!session?.user) {
+            return;
+          }
 
-          if (!adminError && adminRecord) {
+          const admin =
+            await verifyAdministrator(
+              session.user.id
+            );
+
+          if (admin) {
             window.location.replace(redirect);
           }
         } catch (error) {
-          console.error("Error verificando la sesión:", error);
+          console.error(
+            "Error verificando sesión:",
+            error
+          );
         }
       }
 
-      form?.addEventListener("submit", async (event) => {
-        event.preventDefault();
+      form?.addEventListener(
+        "submit",
+        async (event) => {
+          event.preventDefault();
 
-        if (!button) {
-          return;
-        }
+          if (!button) {
+            return;
+          }
 
-        const email =
-          document
-            .querySelector<HTMLInputElement>("#email")
-            ?.value.trim() ?? "";
+          const email =
+            document
+              .querySelector<HTMLInputElement>(
+                "#email"
+              )
+              ?.value.trim() || "";
 
-        const password =
-          document
-            .querySelector<HTMLInputElement>("#password")
-            ?.value ?? "";
+          const password =
+            document
+              .querySelector<HTMLInputElement>(
+                "#password"
+              )
+              ?.value || "";
 
-        if (!email || !password) {
-          showMessage(
-            "Completa el correo y la contraseña.",
-            "error"
-          );
-          return;
-        }
+          if (!email || !password) {
+            showMessage(
+              "Completa el correo y la contraseña.",
+              "error"
+            );
 
-        button.disabled = true;
-        button.textContent = "Verificando...";
-        showMessage("", "");
+            return;
+          }
 
-        try {
-          const { data, error } =
-            await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
+          button.disabled = true;
+          button.textContent = "Verificando...";
 
-          if (error || !data.user) {
+          showMessage("", "");
+
+          try {
+            const {
+              data,
+              error,
+            } =
+              await supabase.auth.signInWithPassword({
+                email,
+                password,
+              });
+
+            if (error || !data.user) {
+              console.error(
+                "Error de autenticación:",
+                error
+              );
+
+              showMessage(
+                "No fue posible ingresar. Revisa el correo y la contraseña.",
+                "error"
+              );
+
+              return;
+            }
+
+            const admin =
+              await verifyAdministrator(
+                data.user.id
+              );
+
+            if (!admin) {
+              await supabase.auth.signOut();
+
+              showMessage(
+                "Esta cuenta no tiene permisos de administrador.",
+                "error"
+              );
+
+              return;
+            }
+
+            showMessage(
+              "Acceso autorizado. Redirigiendo...",
+              "success"
+            );
+
+            window.location.replace(redirect);
+          } catch (error) {
             console.error(
-              "Error al iniciar sesión:",
+              "Error inesperado:",
               error
             );
 
             showMessage(
-              "No fue posible ingresar. Revisa el correo, la contraseña y la confirmación de la cuenta.",
+              "Ocurrió un error inesperado. Revisa la consola del navegador.",
               "error"
             );
-
-            return;
+          } finally {
+            button.disabled = false;
+            button.textContent =
+              "Ingresar al panel";
           }
-
-          const {
-            data: adminRecord,
-            error: adminError,
-          } = await supabase
-            .from("admin_users")
-            .select("user_id, email")
-            .eq("user_id", data.user.id)
-            .maybeSingle();
-
-          if (adminError || !adminRecord) {
-            console.error(
-              "La cuenta no está autorizada:",
-              adminError
-            );
-
-            await supabase.auth.signOut();
-
-            showMessage(
-              "Esta cuenta no tiene permisos de administrador.",
-              "error"
-            );
-
-            return;
-          }
-
-          showMessage(
-            "Acceso autorizado. Redirigiendo...",
-            "success"
-          );
-
-          window.location.replace(redirect);
-        } catch (error) {
-          console.error(
-            "Error inesperado en el acceso:",
-            error
-          );
-
-          showMessage(
-            "Ocurrió un error inesperado. Revisa la consola del navegador.",
-            "error"
-          );
-        } finally {
-          button.disabled = false;
-          button.textContent = "Ingresar al panel";
         }
-      });
+      );
 
       checkExistingSession();
     </script>
@@ -247,6 +314,7 @@
     display: grid;
     place-items: center;
     padding: 2rem;
+
     background:
       radial-gradient(
         circle at top left,
@@ -268,10 +336,21 @@
 
   .card {
     width: min(100%, 560px);
-    padding: clamp(1.5rem, 5vw, 2.5rem);
-    background: rgb(255 255 255 / 96%);
-    border: 1px solid #dbe8ed;
+    padding: clamp(
+      1.5rem,
+      5vw,
+      2.5rem
+    );
+
+    background:
+      rgb(255 255 255 / 96%);
+
+    border:
+      1px solid
+      #dbe8ed;
+
     border-radius: 28px;
+
     box-shadow:
       0 28px 80px
       rgb(23 50 77 / 14%);
@@ -284,7 +363,7 @@
     margin-bottom: 2rem;
   }
 
-  .brand span:last-child {
+  .brand-text {
     display: grid;
     gap: 0.15rem;
   }
@@ -298,13 +377,16 @@
     width: 48px;
     height: 48px;
     place-items: center;
+
     color: #ffffff;
+
     background:
       linear-gradient(
         135deg,
         #0f7d83,
         #17324d
       );
+
     border-radius: 14px;
     font-weight: 900;
   }
@@ -312,9 +394,12 @@
   .eyebrow {
     display: inline-flex;
     padding: 0.4rem 0.75rem;
+
     color: #0f7d83;
     background: #e5f5f4;
+
     border-radius: 999px;
+
     font-size: 0.8rem;
     font-weight: 900;
     letter-spacing: 0.08em;
@@ -323,8 +408,18 @@
 
   h1 {
     margin: 1rem 0 0.7rem;
-    font-family: Georgia, serif;
-    font-size: clamp(2.3rem, 7vw, 3.5rem);
+
+    font-family:
+      Georgia,
+      serif;
+
+    font-size:
+      clamp(
+        2.3rem,
+        7vw,
+        3.5rem
+      );
+
     line-height: 1;
   }
 
@@ -350,7 +445,11 @@
     width: 100%;
     min-height: 52px;
     padding: 0.9rem 1rem;
-    border: 1px solid #cbdbe3;
+
+    border:
+      1px solid
+      #cbdbe3;
+
     border-radius: 12px;
     background: #ffffff;
     font: inherit;
@@ -360,24 +459,30 @@
     outline:
       3px solid
       rgb(15 125 131 / 15%);
+
     border-color: #0f7d83;
   }
 
   button {
     min-height: 52px;
     padding: 0.9rem 1rem;
+
     color: #ffffff;
+
     background:
       linear-gradient(
         135deg,
         #0f7d83,
         #126b71
       );
+
     border: 0;
     border-radius: 12px;
+
     box-shadow:
       0 12px 28px
       rgb(15 125 131 / 22%);
+
     font: inherit;
     font-weight: 900;
     cursor: pointer;
