@@ -1,115 +1,76 @@
-import type { APIRoute } from "astro";
-import { createClient } from "@supabase/supabase-js";
-
-export const prerender = false;
-
-type MercadoPagoNotification = {
-  type?: string;
-  action?: string;
-  data?: { id?: string | number };
-};
-
-type MercadoPagoPayment = {
-  id?: number | string;
-  status?: string;
-  status_detail?: string;
-  transaction_amount?: number;
-  currency_id?: string;
-  preference_id?: string;
-  external_reference?: string;
-  metadata?: {
-    user_id?: string;
-    ebook_id?: string;
-    product_id?: string;
-  };
-  payer?: { email?: string };
-};
-
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseSecretKey =
-  import.meta.env.SUPABASE_SECRET_KEY ||
-  import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
-const mercadoPagoAccessToken =
-  import.meta.env.MERCADOPAGO_ACCESS_TOKEN;
-const mercadoPagoWebhookSecret =
-  import.meta.env.MERCADOPAGO_WEBHOOK_SECRET;
-
-function jsonResponse(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
+function json(data, status = 200) {
+  return Response.json(data, {
     status,
     headers: {
-      "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-store",
     },
   });
 }
 
-function parseSignatureHeader(header: string) {
-  let ts: string | null = null;
-  let v1: string | null = null;
+function parseSignatureHeader(value = "") {
+  let ts = null;
+  let v1 = null;
 
-  for (const part of header.split(",")) {
-    const [rawKey, rawValue] = part.split("=", 2);
+  for (const segment of value.split(",")) {
+    const [rawKey, rawValue] = segment.split("=", 2);
     const key = rawKey?.trim();
-    const value = rawValue?.trim();
+    const parsedValue = rawValue?.trim();
 
-    if (key === "ts") ts = value || null;
-    if (key === "v1") v1 = value || null;
+    if (key === "ts") ts = parsedValue || null;
+    if (key === "v1") v1 = parsedValue || null;
   }
 
   return { ts, v1 };
 }
 
-function bytesToHex(bytes: ArrayBuffer): string {
-  return Array.from(new Uint8Array(bytes))
+function bytesToHex(buffer) {
+  return Array.from(new Uint8Array(buffer))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 }
 
-function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
+function safeEqual(first, second) {
+  if (first.length !== second.length) return false;
 
-  let result = 0;
+  let difference = 0;
 
-  for (let index = 0; index < a.length; index += 1) {
-    result |= a.charCodeAt(index) ^ b.charCodeAt(index);
+  for (let index = 0; index < first.length; index += 1) {
+    difference |= first.charCodeAt(index) ^ second.charCodeAt(index);
   }
 
-  return result === 0;
+  return difference === 0;
 }
 
-async function validateWebhookSignature({
+async function validateSignature({
   dataId,
-  xRequestId,
-  xSignature,
+  requestId,
+  signatureHeader,
   secret,
-}: {
-  dataId: string;
-  xRequestId: string;
-  xSignature: string;
-  secret: string;
-}): Promise<boolean> {
-  const { ts, v1 } = parseSignatureHeader(xSignature);
+}) {
+  const { ts, v1 } = parseSignatureHeader(signatureHeader);
 
-  if (!ts || !v1) return false;
+  if (!ts || !v1 || !dataId || !requestId || !secret) {
+    return false;
+  }
 
   const normalizedDataId = /[a-z]/i.test(dataId)
     ? dataId.toLowerCase()
     : dataId;
 
-  const parts: string[] = [];
+  const manifest =
+    `id:${normalizedDataId};` +
+    `request-id:${requestId};` +
+    `ts:${ts};`;
 
-  if (normalizedDataId) parts.push(`id:${normalizedDataId};`);
-  if (xRequestId) parts.push(`request-id:${xRequestId};`);
-  parts.push(`ts:${ts};`);
-
-  const manifest = parts.join("");
   const encoder = new TextEncoder();
 
   const key = await crypto.subtle.importKey(
     "raw",
     encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
+    {
+      name: "HMAC",
+      hash: "SHA-256",
+    },
     false,
     ["sign"]
   );
@@ -120,37 +81,10 @@ async function validateWebhookSignature({
     encoder.encode(manifest)
   );
 
-  return constantTimeEqual(bytesToHex(signature), v1);
+  return safeEqual(bytesToHex(signature), v1);
 }
 
-function extractPurchaseMetadata(payment: MercadoPagoPayment) {
-  if (payment.metadata?.user_id && payment.metadata?.ebook_id) {
-    return {
-      userId: payment.metadata.user_id,
-      ebookId: payment.metadata.ebook_id,
-    };
-  }
-
-  if (!payment.external_reference) {
-    return { userId: null, ebookId: null };
-  }
-
-  try {
-    const parsed = JSON.parse(payment.external_reference) as {
-      user_id?: string;
-      ebook_id?: string;
-    };
-
-    return {
-      userId: parsed.user_id || null,
-      ebookId: parsed.ebook_id || null,
-    };
-  } catch {
-    return { userId: null, ebookId: null };
-  }
-}
-
-async function readJsonSafely(response: Response): Promise<unknown> {
+async function readJsonSafely(response) {
   const text = await response.text();
 
   if (!text) return null;
@@ -158,76 +92,257 @@ async function readJsonSafely(response: Response): Promise<unknown> {
   try {
     return JSON.parse(text);
   } catch {
-    return { raw_response: text.slice(0, 1000) };
+    return {
+      raw_response: text.slice(0, 1000),
+    };
   }
 }
 
-export const POST: APIRoute = async ({ request, url }) => {
+function getServerSupabaseKey(env) {
+  return (
+    env.SUPABASE_SECRET_KEY ||
+    env.SUPABASE_SERVICE_ROLE_KEY ||
+    ""
+  );
+}
+
+function getPaymentIdentity(payment) {
+  const metadataUserId = payment?.metadata?.user_id;
+  const metadataProductId = payment?.metadata?.product_id;
+
+  if (metadataUserId && metadataProductId) {
+    return {
+      userId: String(metadataUserId),
+      productId: String(metadataProductId),
+    };
+  }
+
+  const externalReference = String(
+    payment?.external_reference || ""
+  );
+
+  const separatorIndex = externalReference.indexOf("|");
+
+  if (separatorIndex === -1) {
+    return {
+      userId: null,
+      productId: null,
+    };
+  }
+
+  return {
+    userId: externalReference.slice(0, separatorIndex) || null,
+    productId:
+      externalReference.slice(separatorIndex + 1) || null,
+  };
+}
+
+async function findEbookByProductId({
+  env,
+  serverKey,
+  productId,
+}) {
+  const select =
+    "id,legacy_product_id,slug,title,price,currency,published";
+
+  const headers = {
+    apikey: serverKey,
+    Authorization: `Bearer ${serverKey}`,
+    Accept: "application/json",
+  };
+
+  const attempts = [
+    `legacy_product_id=eq.${encodeURIComponent(productId)}`,
+    `slug=eq.${encodeURIComponent(productId)}`,
+  ];
+
+  for (const filter of attempts) {
+    const response = await fetch(
+      `${env.PUBLIC_SUPABASE_URL}/rest/v1/ebooks` +
+        `?select=${encodeURIComponent(select)}` +
+        `&${filter}` +
+        `&published=eq.true` +
+        `&limit=1`,
+      { headers }
+    );
+
+    const data = await readJsonSafely(response);
+
+    if (!response.ok) {
+      console.error(
+        "Error consultando ebooks en Supabase:",
+        data
+      );
+
+      return {
+        ebook: null,
+        error:
+          data?.message ||
+          "No se pudo consultar el ebook.",
+      };
+    }
+
+    if (Array.isArray(data) && data.length > 0) {
+      return {
+        ebook: data[0],
+        error: null,
+      };
+    }
+  }
+
+  return {
+    ebook: null,
+    error: null,
+  };
+}
+
+async function upsertPurchase({
+  env,
+  serverKey,
+  purchase,
+}) {
+  const response = await fetch(
+    `${env.PUBLIC_SUPABASE_URL}/rest/v1/purchases` +
+      "?on_conflict=payment_id",
+    {
+      method: "POST",
+      headers: {
+        apikey: serverKey,
+        Authorization: `Bearer ${serverKey}`,
+        "Content-Type": "application/json",
+        Prefer:
+          "resolution=merge-duplicates,return=representation",
+      },
+      body: JSON.stringify(purchase),
+    }
+  );
+
+  const data = await readJsonSafely(response);
+
+  if (!response.ok) {
+    return {
+      data: null,
+      error:
+        data?.message ||
+        data?.details ||
+        "No se pudo guardar la compra.",
+    };
+  }
+
+  return {
+    data,
+    error: null,
+  };
+}
+
+export function onRequestGet() {
+  return json({
+    ok: true,
+    mensaje: "Webhook de Mercado Pago operativo",
+  });
+}
+
+export async function onRequestPost({ request, env }) {
   try {
-    if (!supabaseUrl || !supabaseSecretKey || !mercadoPagoAccessToken) {
-      return jsonResponse(
-        { error: "Faltan variables privadas del servidor." },
+    const serverKey = getServerSupabaseKey(env);
+
+    if (
+      !env.MERCADOPAGO_ACCESS_TOKEN ||
+      !env.PUBLIC_SUPABASE_URL ||
+      !serverKey
+    ) {
+      console.error(
+        "Faltan variables privadas del servidor."
+      );
+
+      return json(
+        {
+          error:
+            "Faltan variables privadas del servidor.",
+        },
         500
       );
     }
 
-    let body: MercadoPagoNotification;
+    let body;
 
     try {
-      body = (await request.json()) as MercadoPagoNotification;
+      body = await request.json();
     } catch {
-      return jsonResponse(
-        { error: "La notificación no contiene JSON válido." },
+      return json(
+        {
+          error:
+            "La notificación no contiene JSON válido.",
+        },
         400
       );
     }
 
-    const queryDataId =
+    const url = new URL(request.url);
+
+    const queryPaymentId =
       url.searchParams.get("data.id") ||
       url.searchParams.get("id");
 
     const paymentId = String(
-      queryDataId || body.data?.id || ""
+      queryPaymentId || body?.data?.id || ""
     ).trim();
 
     const notificationType =
       url.searchParams.get("type") ||
-      body.type ||
+      body?.type ||
       "";
 
-    if (notificationType && notificationType !== "payment") {
-      return jsonResponse({
+    console.log("Webhook recibido:", {
+      paymentId,
+      notificationType,
+      action: body?.action,
+    });
+
+    if (
+      notificationType &&
+      notificationType !== "payment"
+    ) {
+      return json({
         received: true,
         ignored: true,
+        reason: "Evento distinto de payment.",
       });
     }
 
     if (!paymentId) {
-      return jsonResponse(
-        { error: "No se recibió el ID del pago." },
+      return json(
+        {
+          error:
+            "La notificación no contiene el ID del pago.",
+        },
         400
       );
     }
 
-    if (mercadoPagoWebhookSecret) {
-      const xSignature =
+    if (env.MERCADOPAGO_WEBHOOK_SECRET) {
+      const signatureHeader =
         request.headers.get("x-signature") || "";
-      const xRequestId =
+
+      const requestId =
         request.headers.get("x-request-id") || "";
 
-      const valid =
-        xSignature &&
-        xRequestId &&
-        (await validateWebhookSignature({
-          dataId: queryDataId || paymentId,
-          xRequestId,
-          xSignature,
-          secret: mercadoPagoWebhookSecret,
-        }));
+      const validSignature = await validateSignature({
+        dataId: queryPaymentId || paymentId,
+        requestId,
+        signatureHeader,
+        secret: env.MERCADOPAGO_WEBHOOK_SECRET,
+      });
 
-      if (!valid) {
-        return jsonResponse(
-          { error: "Firma de webhook inválida." },
+      if (!validSignature) {
+        console.error(
+          "Webhook rechazado por firma inválida."
+        );
+
+        return json(
+          {
+            error: "Firma de webhook inválida.",
+          },
           401
         );
       }
@@ -239,139 +354,187 @@ export const POST: APIRoute = async ({ request, url }) => {
       )}`,
       {
         headers: {
-          Authorization: `Bearer ${mercadoPagoAccessToken}`,
+          Authorization:
+            `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}`,
           Accept: "application/json",
         },
       }
     );
 
-    const paymentData = await readJsonSafely(paymentResponse);
+    const payment =
+      await readJsonSafely(paymentResponse);
 
     if (!paymentResponse.ok) {
-      console.error("No se pudo verificar el pago:", paymentData);
+      console.error(
+        "No se pudo verificar el pago:",
+        payment
+      );
 
-      return jsonResponse(
-        { error: "No se pudo verificar el pago." },
+      return json(
+        {
+          error:
+            "No se pudo verificar el pago en Mercado Pago.",
+        },
         502
       );
     }
 
-    const payment = paymentData as MercadoPagoPayment;
-    const { userId, ebookId } =
-      extractPurchaseMetadata(payment);
+    const { userId, productId } =
+      getPaymentIdentity(payment);
 
-    if (!userId || !ebookId) {
-      return jsonResponse(
+    if (!userId || !productId) {
+      console.error(
+        "El pago no contiene user_id y product_id:",
+        payment
+      );
+
+      return json(
         {
           error:
-            "El pago no contiene user_id y ebook_id.",
+            "El pago no contiene los datos necesarios para registrar la compra.",
         },
         422
       );
     }
 
-    const supabaseAdmin = createClient(
-      supabaseUrl,
-      supabaseSecretKey,
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false,
+    const { ebook, error: ebookError } =
+      await findEbookByProductId({
+        env,
+        serverKey,
+        productId,
+      });
+
+    if (ebookError) {
+      return json(
+        {
+          error: ebookError,
         },
-      }
-    );
-
-    const { data: ebook, error: ebookError } =
-      await supabaseAdmin
-        .from("ebooks")
-        .select("id, price, currency")
-        .eq("id", ebookId)
-        .maybeSingle();
-
-    if (ebookError || !ebook) {
-      return jsonResponse(
-        { error: "No se pudo verificar el ebook." },
         500
       );
     }
 
-    const paidAmount = Number(payment.transaction_amount || 0);
-    const expectedAmount = Number(ebook.price || 0);
-    const paidCurrency = (
-      payment.currency_id || ""
+    if (!ebook) {
+      return json(
+        {
+          error:
+            "No se encontró el ebook asociado al pago.",
+        },
+        404
+      );
+    }
+
+    const paidAmount = Number(
+      payment?.transaction_amount || 0
+    );
+
+    const expectedAmount = Number(
+      ebook.price || 0
+    );
+
+    const paidCurrency = String(
+      payment?.currency_id || ""
     ).toUpperCase();
-    const expectedCurrency = (
+
+    const expectedCurrency = String(
       ebook.currency || "CLP"
     ).toUpperCase();
 
     if (
+      !Number.isFinite(paidAmount) ||
+      paidAmount <= 0 ||
       paidAmount !== expectedAmount ||
       paidCurrency !== expectedCurrency
     ) {
-      return jsonResponse(
+      console.error(
+        "Monto o moneda no coinciden:",
+        {
+          paidAmount,
+          expectedAmount,
+          paidCurrency,
+          expectedCurrency,
+        }
+      );
+
+      return json(
         {
           error:
-            "El monto o la moneda no coincide con el ebook.",
+            "El monto o la moneda del pago no coincide con el ebook.",
         },
         422
       );
     }
 
-    const purchaseRecord = {
+    const purchase = {
       user_id: userId,
-      ebook_id: ebookId,
-      payment_id: String(payment.id || paymentId),
-      preference_id: payment.preference_id || null,
-      status: payment.status || "unknown",
-      status_detail: payment.status_detail || null,
+      ebook_id: ebook.id,
+      payment_id: String(
+        payment?.id || paymentId
+      ),
+      preference_id:
+        payment?.preference_id || null,
+      status:
+        payment?.status || "unknown",
+      status_detail:
+        payment?.status_detail || null,
       amount: paidAmount,
       currency: paidCurrency,
-      payer_email: payment.payer?.email || null,
+      payer_email:
+        payment?.payer?.email || null,
       updated_at: new Date().toISOString(),
       raw_payment: payment,
     };
 
     const { error: purchaseError } =
-      await supabaseAdmin
-        .from("purchases")
-        .upsert(purchaseRecord, {
-          onConflict: "payment_id",
-        });
+      await upsertPurchase({
+        env,
+        serverKey,
+        purchase,
+      });
 
     if (purchaseError) {
-      console.error("No se pudo guardar la compra:", purchaseError);
+      console.error(
+        "No se pudo guardar la compra:",
+        purchaseError
+      );
 
-      return jsonResponse(
-        { error: "No se pudo registrar la compra." },
+      return json(
+        {
+          error:
+            "No se pudo registrar la compra en Supabase.",
+          details: purchaseError,
+        },
         500
       );
     }
 
-    return jsonResponse({
+    console.log("Compra registrada:", {
+      paymentId: purchase.payment_id,
+      userId,
+      ebookId: ebook.id,
+      status: purchase.status,
+    });
+
+    return json({
       received: true,
-      payment_id: purchaseRecord.payment_id,
-      status: purchaseRecord.status,
+      payment_id: purchase.payment_id,
+      status: purchase.status,
     });
   } catch (error) {
-    console.error("Error inesperado en webhook:", error);
+    console.error(
+      "Error inesperado en webhook:",
+      error
+    );
 
-    return jsonResponse(
+    return json(
       {
         error:
           "Ocurrió un error inesperado procesando el webhook.",
+        details:
+          error instanceof Error
+            ? error.message
+            : String(error),
       },
       500
     );
   }
-};
-
-export const ALL: APIRoute = async () => {
-  return jsonResponse(
-    {
-      error:
-        "Método no permitido. Esta ruta acepta solamente POST.",
-    },
-    405
-  );
-};
+}
