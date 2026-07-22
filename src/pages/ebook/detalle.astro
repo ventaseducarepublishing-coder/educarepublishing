@@ -414,7 +414,17 @@
 
       buyButton?.addEventListener("click", startCheckout);
 
-      await loadEbook();
+      try {
+  await loadEbook();
+} catch (error) {
+  console.error("Error inesperado al cargar el ebook:", error);
+
+  showError(
+    error instanceof Error
+      ? `Error al cargar el ebook: ${error.message}`
+      : "Ocurrió un error inesperado al cargar el ebook."
+  );
+}
     </script>
   </body>
 </html>
