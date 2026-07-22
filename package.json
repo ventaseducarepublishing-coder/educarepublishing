@@ -15,7 +15,9 @@
   "dependencies": {
     "@astrojs/cloudflare": "^14.1.4",
     "@supabase/supabase-js": "^2.57.4",
-    "astro": "^7.0.7",
-    "wrangler": "^4.112.0"
+    "astro": "^7.0.7"
+  },
+  "devDependencies": {
+    "wrangler": "^4.113.0"
   }
 }
