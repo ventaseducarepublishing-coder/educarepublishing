@@ -190,7 +190,15 @@
       ?.trim() ?? ""
   );
 }
+function relationName(relation: Relation, fallback: string) {
+  if (!relation) return fallback;
 
+  if (Array.isArray(relation)) {
+    return relation[0]?.name ?? fallback;
+  }
+
+  return relation.name ?? fallback;
+}
       function formatPrice(value: number, currency = "CLP") {
         return new Intl.NumberFormat("es-CL", {
           style: "currency",
