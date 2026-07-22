@@ -182,16 +182,14 @@
 
       let currentEbook: Ebook | null = null;
 
+            
       function getSlugFromPath() {
-        const parts = window.location.pathname.split("/").filter(Boolean);
-        return decodeURIComponent(parts.at(-1) ?? "");
-      }
-
-      function relationName(relation: Relation, fallback: string) {
-        if (!relation) return fallback;
-        if (Array.isArray(relation)) return relation[0]?.name ?? fallback;
-        return relation.name ?? fallback;
-      }
+  return (
+    new URLSearchParams(window.location.search)
+      .get("slug")
+      ?.trim() ?? ""
+  );
+}
 
       function formatPrice(value: number, currency = "CLP") {
         return new Intl.NumberFormat("es-CL", {
