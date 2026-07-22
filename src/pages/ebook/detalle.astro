@@ -332,7 +332,7 @@ function relationName(relation: Relation, fallback: string) {
             author:authors(name)
           `)
           .eq("slug", slug)
-          
+          .eq("published", true)
           .maybeSingle();
 
         if (error) {
