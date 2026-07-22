@@ -1,5 +1,4 @@
 ---
-export const prerender = false;
 ---
 
 <!doctype html>
@@ -184,12 +183,9 @@ export const prerender = false;
       let currentEbook: Ebook | null = null;
 
       function getSlugFromPath() {
-  return (
-    new URLSearchParams(window.location.search)
-      .get("slug")
-      ?.trim() ?? ""
-  );
-}
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        return decodeURIComponent(parts.at(-1) ?? "");
+      }
 
       function relationName(relation: Relation, fallback: string) {
         if (!relation) return fallback;

@@ -357,7 +357,7 @@
               <article class="ebook-card" data-title="${title.toLowerCase()}" data-description="${description.toLowerCase()}" data-category="${category.toLowerCase()}">
                 <a
                   class="ebook-cover"
-                  href="/ebook/${slug}/"
+                  href="/ebook/detalle/?slug=${slug}"
                   aria-label="Ver detalles de ${title}"
                 >
                   ${
@@ -374,7 +374,7 @@
 
                 <div class="ebook-information">
                   <span class="category">${category}</span>
-                  <h3><a href="/ebook/${slug}/">${title}</a></h3>
+                  <h3><a href="/ebook/detalle/?slug=${slug}">${title}</a></h3>
                   <p>${description}</p>
 
                   <div class="ebook-footer">
@@ -384,7 +384,7 @@
                     )}</strong>
 
                     <div class="ebook-actions">
-                      <a class="details-button" href="/ebook/${slug}/">
+                      <a class="details-button" href="/ebook/detalle/?slug=${slug}">
                         Ver detalles
                       </a>
 
