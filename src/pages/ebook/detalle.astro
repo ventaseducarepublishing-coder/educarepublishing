@@ -324,7 +324,7 @@
             author:authors(name)
           `)
           .eq("slug", slug)
-          .eq("published", true)
+          
           .maybeSingle();
 
         if (error) {
