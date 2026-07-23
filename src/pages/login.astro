@@ -5,42 +5,52 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
     <meta name="robots" content="noindex,nofollow" />
-    <title>Administración | Educare Publishing</title>
+
+    <title>Ingresar | Educare Publishing</title>
   </head>
 
   <body>
     <main class="card">
       <a class="brand" href="/">
         <span class="logo">EP</span>
+
         <span>
           <strong>Educare Publishing</strong>
-          <small>Panel de administración</small>
+          <small>Biblioteca digital</small>
         </span>
       </a>
 
-      <div class="eyebrow">Acceso privado</div>
-      <h1>Ingresar al panel</h1>
+      <div class="eyebrow">
+        Acceso de clientes
+      </div>
+
+      <h1>Ingresa a tu cuenta</h1>
 
       <p class="intro">
-        Acceso exclusivo para administradores autorizados.
+        Accede a tus ebooks comprados y continúa con tu compra.
       </p>
 
-      <form id="admin-login-form">
+      <form id="login-form">
         <label>
           Correo electrónico
+
           <input
             id="email"
             type="email"
             autocomplete="email"
-            placeholder="ventaseducarepublishing@gmail.com"
+            placeholder="tu@email.com"
             required
           />
         </label>
 
         <label>
           Contraseña
+
           <input
             id="password"
             type="password"
@@ -49,37 +59,88 @@
           />
         </label>
 
-        <button id="submit-button" type="submit">
-          Ingresar al panel
+        <button
+          id="submit-button"
+          type="submit"
+        >
+          Ingresar
         </button>
 
-        <div id="message" class="message" role="status"></div>
+        <div
+          id="message"
+          class="message"
+          role="status"
+        ></div>
       </form>
 
       <p class="helper">
-        <a href="/recuperar-contrasena">Olvidé mi contraseña</a>
+        ¿Todavía no tienes cuenta?
+        <a id="register-link" href="/registro">
+          Crear cuenta
+        </a>
+      </p>
+
+      <p class="helper">
+        <a href="/recuperar-contrasena">
+          Olvidé mi contraseña
+        </a>
       </p>
 
       <p class="back">
-        <a href="/">← Volver a la tienda</a>
+        <a href="/">
+          ← Volver a la tienda
+        </a>
       </p>
     </main>
 
     <script>
       import { supabase } from "../lib/supabase";
 
-      const redirect =
-        new URLSearchParams(window.location.search).get("redirect") ||
-        "/admin";
+      const params =
+        new URLSearchParams(window.location.search);
+
+      const product =
+        params.get("product")?.trim() || "";
+
+      const requestedRedirect =
+        params.get("redirect")?.trim() || "";
+
+      const safeRedirect =
+        requestedRedirect.startsWith("/") &&
+        !requestedRedirect.startsWith("//")
+          ? requestedRedirect
+          : "";
+
+      const defaultRedirect =
+        safeRedirect ||
+        (product
+          ? `/?buy=${encodeURIComponent(product)}#ebooks`
+          : "/mi-biblioteca");
 
       const form =
-        document.querySelector<HTMLFormElement>("#admin-login-form");
+        document.querySelector<HTMLFormElement>(
+          "#login-form"
+        );
 
       const button =
-        document.querySelector<HTMLButtonElement>("#submit-button");
+        document.querySelector<HTMLButtonElement>(
+          "#submit-button"
+        );
 
       const message =
-        document.querySelector<HTMLDivElement>("#message");
+        document.querySelector<HTMLDivElement>(
+          "#message"
+        );
+
+      const registerLink =
+        document.querySelector<HTMLAnchorElement>(
+          "#register-link"
+        );
+
+      if (registerLink && product) {
+        registerLink.href =
+          `/registro?product=${encodeURIComponent(product)}`;
+      }
 
       function showMessage(
         text: string,
@@ -102,121 +163,107 @@
             error,
           } = await supabase.auth.getSession();
 
-          if (error || !session?.user) {
+          if (error) {
+            console.error(
+              "Error verificando sesión:",
+              error
+            );
+
             return;
           }
 
-          const { data: adminRecord, error: adminError } =
-            await supabase
-              .from("admin_users")
-              .select("user_id")
-              .eq("user_id", session.user.id)
-              .maybeSingle();
-
-          if (!adminError && adminRecord) {
-            window.location.replace(redirect);
+          if (session?.user) {
+            window.location.replace(defaultRedirect);
           }
         } catch (error) {
-          console.error("Error verificando la sesión:", error);
+          console.error(
+            "Error inesperado verificando sesión:",
+            error
+          );
         }
       }
 
-      form?.addEventListener("submit", async (event) => {
-        event.preventDefault();
+      form?.addEventListener(
+        "submit",
+        async (event) => {
+          event.preventDefault();
 
-        if (!button) {
-          return;
-        }
+          if (!button) return;
 
-        const email =
-          document
-            .querySelector<HTMLInputElement>("#email")
-            ?.value.trim() ?? "";
+          const email =
+            document
+              .querySelector<HTMLInputElement>(
+                "#email"
+              )
+              ?.value.trim() || "";
 
-        const password =
-          document
-            .querySelector<HTMLInputElement>("#password")
-            ?.value ?? "";
+          const password =
+            document
+              .querySelector<HTMLInputElement>(
+                "#password"
+              )
+              ?.value || "";
 
-        if (!email || !password) {
-          showMessage(
-            "Completa el correo y la contraseña.",
-            "error"
-          );
-          return;
-        }
+          if (!email || !password) {
+            showMessage(
+              "Completa el correo y la contraseña.",
+              "error"
+            );
 
-        button.disabled = true;
-        button.textContent = "Verificando...";
-        showMessage("", "");
+            return;
+          }
 
-        try {
-          const { data, error } =
-            await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
+          button.disabled = true;
+          button.textContent = "Ingresando...";
 
-          if (error || !data.user) {
+          showMessage("", "");
+
+          try {
+            const {
+              data,
+              error,
+            } =
+              await supabase.auth.signInWithPassword({
+                email,
+                password,
+              });
+
+            if (error || !data.user) {
+              console.error(
+                "Error iniciando sesión:",
+                error
+              );
+
+              showMessage(
+                "No fue posible ingresar. Revisa el correo y la contraseña.",
+                "error"
+              );
+
+              return;
+            }
+
+            showMessage(
+              "Sesión iniciada. Redirigiendo...",
+              "success"
+            );
+
+            window.location.replace(defaultRedirect);
+          } catch (error) {
             console.error(
-              "Error al iniciar sesión:",
+              "Error inesperado:",
               error
             );
 
             showMessage(
-              "No fue posible ingresar. Revisa el correo, la contraseña y la confirmación de la cuenta.",
+              "Ocurrió un error inesperado al iniciar sesión.",
               "error"
             );
-
-            return;
+          } finally {
+            button.disabled = false;
+            button.textContent = "Ingresar";
           }
-
-          const {
-            data: adminRecord,
-            error: adminError,
-          } = await supabase
-            .from("admin_users")
-            .select("user_id, email")
-            .eq("user_id", data.user.id)
-            .maybeSingle();
-
-          if (adminError || !adminRecord) {
-            console.error(
-              "La cuenta no está autorizada:",
-              adminError
-            );
-
-            await supabase.auth.signOut();
-
-            showMessage(
-              "Esta cuenta no tiene permisos de administrador.",
-              "error"
-            );
-
-            return;
-          }
-
-          showMessage(
-            "Acceso autorizado. Redirigiendo...",
-            "success"
-          );
-
-          window.location.replace(redirect);
-        } catch (error) {
-          console.error(
-            "Error inesperado en el acceso:",
-            error
-          );
-
-          showMessage(
-            "Ocurrió un error inesperado. Revisa la consola del navegador.",
-            "error"
-          );
-        } finally {
-          button.disabled = false;
-          button.textContent = "Ingresar al panel";
         }
-      });
+      );
 
       checkExistingSession();
     </script>
@@ -247,6 +294,7 @@
     display: grid;
     place-items: center;
     padding: 2rem;
+
     background:
       radial-gradient(
         circle at top left,
@@ -360,6 +408,7 @@
     outline:
       3px solid
       rgb(15 125 131 / 15%);
+
     border-color: #0f7d83;
   }
 
