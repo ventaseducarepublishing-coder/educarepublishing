@@ -176,85 +176,72 @@
     <script>
       import { supabase } from "../lib/supabase";
 
-      const catalog = {
-        recien_nacido: {
-          cover:
-            "/portadas/primer-ano-bebe.png",
+      type Relation = { name: string } | { name: string }[] | null;
 
-          author:
-            "Andrea Carolina Reyes Hernández",
-
-          category:
-            "Salud y familia",
-
-          filename:
-            "guia-primer-ano-bebe.pdf",
-        },
-
-        sopas_caseras: {
-          cover:
-            "/portadas/sopas-del-mundo.png",
-
-          author:
-            "Educare Publishing",
-
-          category:
-            "Cocina",
-
-          filename:
-            "las-mejores-sopas-del-mundo.pdf",
-        },
-
-        lactancia_materna: {
-          cover:
-            "/portadas/lactancia-materna.png",
-
-          author:
-            "Andrea Carolina Reyes Hernández",
-
-          category:
-            "Maternidad",
-
-          filename:
-            "lactancia-materna.pdf",
-        },
+      type EbookRelation = {
+        id: string;
+        legacy_product_id: string | null;
+        slug: string;
+        title: string;
+        cover_url: string | null;
+        pdf_path: string | null;
+        published: boolean;
+        category: Relation;
+        author: Relation;
       };
 
-      const welcome =
-        document.querySelector("#welcome");
+      type PurchaseRow = {
+        id: string;
+        user_id: string;
+        ebook_id: string;
+        ebook: EbookRelation | EbookRelation[] | null;
+      };
 
-      const books =
-        document.querySelector("#books");
+      type LibraryItem = {
+        purchaseId: string;
+        ebookId: string;
+        productId: string;
+        slug: string;
+        title: string;
+        coverUrl: string;
+        filename: string;
+        author: string;
+        category: string;
+      };
 
-      const empty =
-        document.querySelector("#empty");
+      const welcome = document.querySelector<HTMLElement>("#welcome");
+      const books = document.querySelector<HTMLElement>("#books");
+      const empty = document.querySelector<HTMLElement>("#empty");
+      const noResults = document.querySelector<HTMLElement>("#no-results");
+      const generalMessage = document.querySelector<HTMLElement>("#general-message");
+      const logoutButton = document.querySelector<HTMLButtonElement>("#logout");
+      const searchInput = document.querySelector<HTMLInputElement>("#search");
+      const categoryFilter = document.querySelector<HTMLSelectElement>("#category-filter");
+      const bookCount = document.querySelector<HTMLElement>("#book-count");
 
-      const noResults =
-        document.querySelector("#no-results");
-
-      const generalMessage =
-        document.querySelector(
-          "#general-message"
-        );
-
-      const logoutButton =
-        document.querySelector("#logout");
-
-      const searchInput =
-        document.querySelector("#search");
-
-      const categoryFilter =
-        document.querySelector(
-          "#category-filter"
-        );
-
-      const bookCount =
-        document.querySelector("#book-count");
-
-      let purchases = [];
+      let libraryItems: LibraryItem[] = [];
       let accessToken = "";
 
-      iniciarBiblioteca();
+      function relationName(relation: Relation, fallback: string) {
+        if (!relation) return fallback;
+        if (Array.isArray(relation)) return relation[0]?.name || fallback;
+        return relation.name || fallback;
+      }
+
+      function normalizeEbook(relation: PurchaseRow["ebook"]): EbookRelation | null {
+        if (!relation) return null;
+        if (Array.isArray(relation)) return relation[0] || null;
+        return relation;
+      }
+
+      function filenameFromPath(pdfPath: string | null, slug: string) {
+        const filename = pdfPath?.split("/").filter(Boolean).at(-1);
+        return filename || `${slug}.pdf`;
+      }
+
+      function safeProductId(ebook: EbookRelation) {
+        return ebook.legacy_product_id?.trim() || ebook.slug.trim() || ebook.id;
+      }
 
       async function iniciarBiblioteca() {
         try {
@@ -263,20 +250,18 @@
             error: sessionError,
           } = await supabase.auth.getSession();
 
-          if (sessionError) {
-            throw sessionError;
-          }
+          if (sessionError) throw sessionError;
 
-          if (!session) {
-            window.location.href = "/login";
+          if (!session?.user) {
+            window.location.href =
+              `/login?redirect=${encodeURIComponent("/mi-biblioteca")}`;
             return;
           }
 
           accessToken = session.access_token;
 
           const displayName =
-            session.user.user_metadata
-              ?.full_name ||
+            session.user.user_metadata?.full_name ||
             session.user.email ||
             "lector";
 
@@ -285,78 +270,71 @@
               `Hola, ${displayName}. Aquí puedes leer y descargar tus ebooks.`;
           }
 
-          const { data, error } =
-            await supabase
-              .from("purchases")
-              .select(
-                `
-                  id,
-                  user_id,
-                  product_id,
-                  product_title,
-                  status,
-                  approved_at,
-                  created_at
-                `
+          const { data, error } = await supabase
+            .from("purchases")
+            .select(`
+              id,
+              user_id,
+              ebook_id,
+              ebook:ebooks(
+                id,
+                legacy_product_id,
+                slug,
+                title,
+                cover_url,
+                pdf_path,
+                published,
+                category:categories(name),
+                author:authors(name)
               )
-              .eq(
-                "user_id",
-                session.user.id
-              )
-              .eq(
-                "status",
-                "approved"
-              )
-              .order(
-                "created_at",
-                {
-                  ascending: false,
-                }
-              );
+            `)
+            .eq("user_id", session.user.id);
 
-          if (error) {
-            throw error;
-          }
+          if (error) throw error;
 
-          purchases =
-            Array.isArray(data)
-              ? data
-              : [];
+          const rows = Array.isArray(data) ? (data as PurchaseRow[]) : [];
 
-          if (bookCount) {
-            bookCount.textContent =
-              String(purchases.length);
-          }
+          libraryItems = rows
+            .map((purchase): LibraryItem | null => {
+              const ebook = normalizeEbook(purchase.ebook);
+              if (!ebook || !ebook.published) return null;
 
-          if (!purchases.length) {
-            if (empty) {
-              empty.hidden = false;
-            }
+              return {
+                purchaseId: purchase.id,
+                ebookId: purchase.ebook_id,
+                productId: safeProductId(ebook),
+                slug: ebook.slug,
+                title: ebook.title,
+                coverUrl: ebook.cover_url || "/favicon.svg",
+                filename: filenameFromPath(ebook.pdf_path, ebook.slug),
+                author: relationName(ebook.author, "Educare Publishing"),
+                category: relationName(ebook.category, "General"),
+              };
+            })
+            .filter((item): item is LibraryItem => item !== null);
 
+          if (bookCount) bookCount.textContent = String(libraryItems.length);
+
+          if (!libraryItems.length) {
+            if (books) books.innerHTML = "";
+            if (empty) empty.hidden = false;
+            if (noResults) noResults.hidden = true;
             return;
           }
 
-          if (empty) {
-            empty.hidden = true;
-          }
+          if (empty) empty.hidden = true;
 
           cargarCategorias();
           renderFilteredBooks();
         } catch (error) {
-          console.error(
-            "Error cargando biblioteca:",
-            error
-          );
+          console.error("Error cargando biblioteca:", error);
 
           if (welcome) {
-            welcome.textContent =
-              "No fue posible cargar tu biblioteca.";
+            welcome.textContent = "No fue posible cargar tu biblioteca.";
           }
 
           mostrarMensajeGeneral(
-            error instanceof Error
-              ? error.message
-              : "Ocurrió un error inesperado.",
+            getErrorMessage(error, "Ocurrió un error inesperado."),
             "error"
           );
         }
@@ -365,207 +343,79 @@
       function cargarCategorias() {
         if (!categoryFilter) return;
 
-        const categories = [
-          ...new Set(
-            purchases.map(
-              (purchase) => {
-                return (
-                  catalog[
-                    purchase.product_id
-                  ]?.category ||
-                  "General"
-                );
-              }
-            )
-          ),
-        ].sort((a, b) =>
-          a.localeCompare(b, "es")
-        );
+        const categories = [...new Set(libraryItems.map((item) => item.category))]
+          .sort((a, b) => a.localeCompare(b, "es"));
 
         categoryFilter.innerHTML =
-          `
-            <option value="all">
-              Todas las categorías
-            </option>
-          ` +
+          `<option value="all">Todas las categorías</option>` +
           categories
-            .map((category) => {
-              return `
-                <option
-                  value="${escapeHtml(
-                    category
-                  )}"
-                >
-                  ${escapeHtml(category)}
-                </option>
-              `;
-            })
+            .map(
+              (category) =>
+                `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`
+            )
             .join("");
       }
 
       function renderFilteredBooks() {
         const query =
-          searchInput?.value
-            .trim()
-            .toLocaleLowerCase("es") ||
-          "";
+          searchInput?.value.trim().toLocaleLowerCase("es") || "";
 
-        const selectedCategory =
-          categoryFilter?.value ||
-          "all";
+        const selectedCategory = categoryFilter?.value || "all";
 
-        const filtered =
-          purchases.filter(
-            (purchase) => {
-              const metadata =
-                catalog[
-                  purchase.product_id
-                ] || {};
+        const filtered = libraryItems.filter((item) => {
+          const searchable =
+            `${item.title} ${item.author} ${item.category}`.toLocaleLowerCase("es");
 
-              const title =
-                String(
-                  purchase.product_title ||
-                  ""
-                ).toLocaleLowerCase("es");
+          const matchesSearch = !query || searchable.includes(query);
+          const matchesCategory =
+            selectedCategory === "all" || item.category === selectedCategory;
 
-              const author =
-                String(
-                  metadata.author || ""
-                ).toLocaleLowerCase("es");
-
-              const category =
-                String(
-                  metadata.category ||
-                  "General"
-                );
-
-              const matchesSearch =
-                !query ||
-                title.includes(query) ||
-                author.includes(query) ||
-                category
-                  .toLocaleLowerCase("es")
-                  .includes(query);
-
-              const matchesCategory =
-                selectedCategory === "all" ||
-                category ===
-                  selectedCategory;
-
-              return (
-                matchesSearch &&
-                matchesCategory
-              );
-            }
-          );
+          return matchesSearch && matchesCategory;
+        });
 
         if (noResults) {
-          noResults.hidden =
-            filtered.length > 0;
+          noResults.hidden = filtered.length > 0 || libraryItems.length === 0;
         }
 
         renderBooks(filtered);
       }
 
-      function renderBooks(items) {
+      function renderBooks(items: LibraryItem[]) {
         if (!books) return;
 
         books.innerHTML = items
-          .map((purchase) => {
-            const metadata =
-              catalog[
-                purchase.product_id
-              ] || {};
-
-            const cover =
-              metadata.cover ||
-              "/favicon.svg";
-
-            const author =
-              metadata.author ||
-              "Educare Publishing";
-
-            const category =
-              metadata.category ||
-              "General";
-
-            const purchaseDate =
-              purchase.approved_at ||
-              purchase.created_at;
-
-            const formattedDate =
-              purchaseDate
-                ? new Intl.DateTimeFormat(
-                    "es-CL",
-                    {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    }
-                  ).format(
-                    new Date(
-                      purchaseDate
-                    )
-                  )
-                : "Fecha no disponible";
-
-            return `
+          .map(
+            (item) => `
               <article class="book-card">
                 <div class="cover-panel">
                   <img
                     class="book-cover"
-                    src="${escapeHtml(
-                      cover
-                    )}"
-                    alt="Portada de ${escapeHtml(
-                      purchase.product_title
-                    )}"
+                    src="${escapeHtml(item.coverUrl)}"
+                    alt="Portada de ${escapeHtml(item.title)}"
                     loading="lazy"
                   />
                 </div>
 
                 <div class="book-content">
                   <div class="badges">
-                    <span class="status-badge">
-                      Compra verificada
-                    </span>
-
-                    <span class="category-badge">
-                      ${escapeHtml(
-                        category
-                      )}
-                    </span>
+                    <span class="status-badge">Compra verificada</span>
+                    <span class="category-badge">${escapeHtml(item.category)}</span>
                   </div>
 
-                  <h2>
-                    ${escapeHtml(
-                      purchase.product_title
-                    )}
-                  </h2>
+                  <h2>${escapeHtml(item.title)}</h2>
 
-                  <p class="book-author">
-                    ${escapeHtml(author)}
-                  </p>
+                  <p class="book-author">${escapeHtml(item.author)}</p>
 
                   <div class="book-info">
-                    <span>
-                      Disponible desde
-                    </span>
-
-                    <strong>
-                      ${escapeHtml(
-                        formattedDate
-                      )}
-                    </strong>
+                    <span>Estado</span>
+                    <strong>Disponible</strong>
                   </div>
 
                   <div class="book-actions">
                     <button
                       class="read-button"
                       type="button"
-                      data-product-id="${escapeHtml(
-                        purchase.product_id
-                      )}"
+                      data-product-id="${escapeHtml(item.productId)}"
                     >
                       Leer online
                     </button>
@@ -573,22 +423,18 @@
                     <button
                       class="download-button"
                       type="button"
-                      data-product-id="${escapeHtml(
-                        purchase.product_id
-                      )}"
+                      data-product-id="${escapeHtml(item.productId)}"
+                      data-filename="${escapeHtml(item.filename)}"
                     >
                       Descargar PDF
                     </button>
                   </div>
 
-                  <p
-                    class="action-message"
-                    aria-live="polite"
-                  ></p>
+                  <p class="action-message" aria-live="polite"></p>
                 </div>
               </article>
-            `;
-          })
+            `
+          )
           .join("");
 
         conectarBotones();
@@ -596,119 +442,62 @@
 
       function conectarBotones() {
         document
-          .querySelectorAll(
-            ".read-button"
-          )
+          .querySelectorAll<HTMLButtonElement>(".read-button")
           .forEach((button) => {
-            button.addEventListener(
-              "click",
-              async () => {
-                await abrirOnline(
-                  button
-                );
-              }
-            );
+            button.addEventListener("click", async () => {
+              await abrirOnline(button);
+            });
           });
 
         document
-          .querySelectorAll(
-            ".download-button"
-          )
+          .querySelectorAll<HTMLButtonElement>(".download-button")
           .forEach((button) => {
-            button.addEventListener(
-              "click",
-              async () => {
-                await descargarArchivo(
-                  button
-                );
-              }
-            );
+            button.addEventListener("click", async () => {
+              await descargarArchivo(button);
+            });
           });
       }
 
-      async function obtenerEnlace(
-        productId
-      ) {
-        const response = await fetch(
-          "/api/download",
-          {
-            method: "POST",
+      async function obtenerEnlace(productId: string) {
+        const response = await fetch("/api/download", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ productId }),
+        });
 
-            headers: {
-              "Content-Type":
-                "application/json",
+        let result: { url?: string; error?: string } = {};
 
-              Authorization:
-                `Bearer ${accessToken}`,
-            },
-
-            body: JSON.stringify({
-              productId,
-            }),
-          }
-        );
-
-        const result =
-          await response.json();
+        try {
+          result = await response.json();
+        } catch {
+          throw new Error("El servidor entregó una respuesta inválida.");
+        }
 
         if (!response.ok) {
-          throw new Error(
-            result.error ||
-            "No fue posible autorizar el ebook."
-          );
+          throw new Error(result.error || "No fue posible autorizar el ebook.");
         }
 
         if (!result.url) {
-          throw new Error(
-            "El servidor no entregó el enlace del ebook."
-          );
+          throw new Error("El servidor no entregó el enlace del ebook.");
         }
 
         return result.url;
       }
 
-      async function abrirOnline(
-        button
-      ) {
-        const productId =
-          button.dataset.productId ||
-          "";
+      async function abrirOnline(button: HTMLButtonElement) {
+        const productId = button.dataset.productId || "";
+        const message = obtenerMensaje(button);
 
-        const message =
-          obtenerMensaje(button);
+        if (!productId || !message) return;
 
-        if (
-          !productId ||
-          !message
-        ) {
-          return;
-        }
-
-        const originalText =
-          button.textContent;
-
-        /*
-         * Abrimos la pestaña inmediatamente.
-         * Así el navegador no la bloquea
-         * como ventana emergente tardía.
-         */
-        /*
-         * Abrimos la pestaña en el clic directo.
-         * No usamos "noopener" dentro de window.open porque
-         * algunos navegadores devuelven null aunque la pestaña
-         * sí se haya creado. Eso provocaba que la biblioteca
-         * también navegara al PDF y quedara una pestaña blanca.
-         */
-        const readerWindow =
-          window.open(
-            "about:blank",
-            "_blank"
-          );
+        const originalText = button.textContent || "Leer online";
+        const readerWindow = window.open("about:blank", "_blank");
 
         button.disabled = true;
-        button.textContent =
-          "Abriendo...";
-
+        button.textContent = "Abriendo...";
         limpiarMensaje(message);
 
         try {
@@ -718,78 +507,21 @@
             );
           }
 
-          /*
-           * Cortamos la relación con la página original
-           * después de obtener una referencia válida.
-           */
           readerWindow.opener = null;
-
-          readerWindow.document.title =
-            "Preparando ebook";
-
+          readerWindow.document.title = "Preparando ebook";
           readerWindow.document.body.innerHTML = `
-            <div style="
-              min-height:100vh;
-              display:grid;
-              place-items:center;
-              padding:24px;
-              font-family:Arial,sans-serif;
-              color:#17324d;
-              background:#f4f8fa;
-            ">
-              <div style="
-                max-width:420px;
-                text-align:center;
-              ">
-                <div style="
-                  width:54px;
-                  height:54px;
-                  margin:0 auto 18px;
-                  border:5px solid #d8e7e8;
-                  border-top-color:#0f7d83;
-                  border-radius:50%;
-                  animation:spin 1s linear infinite;
-                "></div>
-
-                <h2 style="
-                  margin:0 0 10px;
-                ">
-                  Preparando tu ebook...
-                </h2>
-
-                <p style="
-                  margin:0;
-                  color:#60758a;
-                  line-height:1.6;
-                ">
-                  Estamos validando tu compra
-                  y generando un acceso seguro.
-                </p>
+            <div style="min-height:100vh;display:grid;place-items:center;padding:24px;font-family:Arial,sans-serif;color:#17324d;background:#f4f8fa;">
+              <div style="max-width:420px;text-align:center;">
+                <div style="width:54px;height:54px;margin:0 auto 18px;border:5px solid #d8e7e8;border-top-color:#0f7d83;border-radius:50%;animation:spin 1s linear infinite;"></div>
+                <h2>Preparando tu ebook...</h2>
+                <p>Estamos validando tu compra y generando un acceso seguro.</p>
               </div>
-
-              <style>
-                @keyframes spin {
-                  to {
-                    transform:
-                      rotate(360deg);
-                  }
-                }
-              </style>
+              <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
             </div>
           `;
 
-          const url =
-            await obtenerEnlace(
-              productId
-            );
-
-          /*
-           * Solo la pestaña nueva navega al PDF.
-           * La biblioteca permanece abierta y no se reemplaza.
-           */
-          readerWindow.location.replace(
-            url
-          );
+          const url = await obtenerEnlace(productId);
+          readerWindow.location.replace(url);
 
           mostrarMensaje(
             message,
@@ -797,103 +529,49 @@
             "success"
           );
         } catch (error) {
-          if (
-            readerWindow &&
-            !readerWindow.closed
-          ) {
-            readerWindow.close();
-          }
-
-          mostrarError(
-            message,
-            error
-          );
+          if (readerWindow && !readerWindow.closed) readerWindow.close();
+          mostrarError(message, error);
         } finally {
           button.disabled = false;
-          button.textContent =
-            originalText;
+          button.textContent = originalText;
         }
       }
 
-      async function descargarArchivo(
-        button
-      ) {
-        const productId =
-          button.dataset.productId ||
-          "";
+      async function descargarArchivo(button: HTMLButtonElement) {
+        const productId = button.dataset.productId || "";
+        const filename = button.dataset.filename || `${productId}.pdf`;
+        const message = obtenerMensaje(button);
 
-        const message =
-          obtenerMensaje(button);
+        if (!productId || !message) return;
 
-        if (
-          !productId ||
-          !message
-        ) {
-          return;
-        }
-
-        const originalText =
-          button.textContent;
+        const originalText = button.textContent || "Descargar PDF";
 
         button.disabled = true;
-        button.textContent =
-          "Preparando descarga...";
-
+        button.textContent = "Preparando descarga...";
         limpiarMensaje(message);
 
         try {
-          const signedUrl =
-            await obtenerEnlace(
-              productId
-            );
-
-          const fileResponse =
-            await fetch(
-              signedUrl
-            );
+          const signedUrl = await obtenerEnlace(productId);
+          const fileResponse = await fetch(signedUrl);
 
           if (!fileResponse.ok) {
-            throw new Error(
-              "No fue posible obtener el archivo PDF."
-            );
+            throw new Error("No fue posible obtener el archivo PDF.");
           }
 
-          const fileBlob =
-            await fileResponse.blob();
-
-          const objectUrl =
-            URL.createObjectURL(
-              fileBlob
-            );
-
-          const filename =
-            catalog[productId]
-              ?.filename ||
-            `${productId}.pdf`;
-
-          const link =
-            document.createElement(
-              "a"
-            );
+          const fileBlob = await fileResponse.blob();
+          const objectUrl = URL.createObjectURL(fileBlob);
+          const link = document.createElement("a");
 
           link.href = objectUrl;
-          link.download =
-            filename;
+          link.download = filename;
+          link.style.display = "none";
 
-          link.style.display =
-            "none";
-
-          document.body.appendChild(
-            link
-          );
-
+          document.body.appendChild(link);
           link.click();
           link.remove();
 
           window.setTimeout(() => {
-            URL.revokeObjectURL(
-              objectUrl
-            );
+            URL.revokeObjectURL(objectUrl);
           }, 1000);
 
           mostrarMensaje(
@@ -902,134 +580,90 @@
             "success"
           );
         } catch (error) {
-          console.error(
-            "Error descargando ebook:",
-            error
-          );
-
-          mostrarError(
-            message,
-            error
-          );
+          console.error("Error descargando ebook:", error);
+          mostrarError(message, error);
         } finally {
           button.disabled = false;
-          button.textContent =
-            originalText;
+          button.textContent = originalText;
         }
       }
 
-      function obtenerMensaje(
-        button
-      ) {
-        const card =
-          button.closest(
-            ".book-card"
-          );
-
-        return card?.querySelector(
-          ".action-message"
-        );
+      function obtenerMensaje(button: HTMLButtonElement) {
+        const card = button.closest(".book-card");
+        return card?.querySelector<HTMLElement>(".action-message") || null;
       }
 
-      function limpiarMensaje(
-        message
-      ) {
+      function limpiarMensaje(message: HTMLElement) {
         message.textContent = "";
-        message.className =
-          "action-message";
+        message.className = "action-message";
       }
 
       function mostrarMensaje(
-        message,
-        text,
-        type
+        message: HTMLElement,
+        text: string,
+        type: "success" | "error"
       ) {
-        message.textContent =
-          text;
-
-        message.className =
-          `action-message ${type}`;
+        message.textContent = text;
+        message.className = `action-message ${type}`;
       }
 
-      function mostrarError(
-        message,
-        error
-      ) {
+      function mostrarError(message: HTMLElement, error: unknown) {
         console.error(error);
 
         mostrarMensaje(
           message,
-          error instanceof Error
-            ? error.message
-            : "No fue posible completar la operación.",
+          getErrorMessage(error, "No fue posible completar la operación."),
           "error"
         );
       }
 
-      searchInput?.addEventListener(
-        "input",
-        renderFilteredBooks
-      );
+      function getErrorMessage(error: unknown, fallback: string) {
+        if (error instanceof Error) return error.message;
 
-      categoryFilter?.addEventListener(
-        "change",
-        renderFilteredBooks
-      );
-
-      logoutButton?.addEventListener(
-        "click",
-        async () => {
-          logoutButton.disabled = true;
-          logoutButton.textContent =
-            "Cerrando sesión...";
-
-          await supabase.auth.signOut();
-
-          window.location.href = "/";
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "message" in error &&
+          typeof (error as { message?: unknown }).message === "string"
+        ) {
+          return (error as { message: string }).message;
         }
-      );
+
+        return fallback;
+      }
+
+      searchInput?.addEventListener("input", renderFilteredBooks);
+      categoryFilter?.addEventListener("change", renderFilteredBooks);
+
+      logoutButton?.addEventListener("click", async () => {
+        logoutButton.disabled = true;
+        logoutButton.textContent = "Cerrando sesión...";
+
+        await supabase.auth.signOut();
+        window.location.href = "/";
+      });
 
       function mostrarMensajeGeneral(
-        text,
-        type
+        text: string,
+        type: "success" | "error"
       ) {
         if (!generalMessage) return;
 
-        generalMessage.hidden =
-          false;
-
-        generalMessage.textContent =
-          text;
-
-        generalMessage.className =
-          `general-message ${type}`;
+        generalMessage.hidden = false;
+        generalMessage.textContent = text;
+        generalMessage.className = `general-message ${type}`;
       }
 
-      function escapeHtml(value) {
-        return String(
-          value ?? ""
-        )
-          .replaceAll(
-            "&",
-            "&amp;"
-          )
-          .replaceAll(
-            "<",
-            "&lt;"
-          )
-          .replaceAll(
-            ">",
-            "&gt;"
-          )
-          .replaceAll(
-            '"',
-            "&quot;"
-          )
-          .replaceAll(
-            "'",
-            "&#039;"
-          );
+      function escapeHtml(value: unknown) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
       }
+
+      iniciarBiblioteca();
     </script>
   </body>
 </html>
