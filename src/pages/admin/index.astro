@@ -55,7 +55,40 @@
   function escapeHtml(value:string){return value.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
   function updateMetrics(){const published=ebooks.filter(e=>e.published).length;const drafts=ebooks.length-published;const catalogValue=ebooks.reduce((s,e)=>s+Number(e.price||0),0);if(totalMetric)totalMetric.textContent=String(ebooks.length);if(publishedMetric)publishedMetric.textContent=String(published);if(draftsMetric)draftsMetric.textContent=String(drafts);if(valueMetric)valueMetric.textContent=formatPrice(catalogValue)}
   function renderEbooks(filter=""){if(!body||!emptyState)return;const n=filter.trim().toLowerCase();const filtered=ebooks.filter(e=>e.title.toLowerCase().includes(n)||e.slug.toLowerCase().includes(n)||getCategoryName(e.category).toLowerCase().includes(n));body.innerHTML="";emptyState.hidden=filtered.length>0;for(const ebook of filtered){const row=document.createElement("tr");const cover=ebook.cover_url?`<img src="${escapeHtml(ebook.cover_url)}" alt="" />`:`<span class="cover-placeholder">EP</span>`;row.innerHTML=`<td><div class="product-cell"><div class="cover">${cover}</div><div><strong>${escapeHtml(ebook.title)}</strong><small>/ebook/detalle/?slug=${escapeHtml(ebook.slug)}</small></div></div></td><td>${escapeHtml(getCategoryName(ebook.category))}</td><td class="price">${formatPrice(Number(ebook.price),ebook.currency)}</td><td><span class="status ${ebook.published?"published":"draft"}">${ebook.published?"Publicado":"Borrador"}</span></td><td><div class="row-actions"><a class="icon-button" href="/ebook/detalle/?slug=${encodeURIComponent(ebook.slug)}" target="_blank">Ver</a><a class="edit-button" href="/admin/editar-ebook/${encodeURIComponent(ebook.id)}">Editar</a><button class="toggle-button" type="button" data-id="${ebook.id}" data-published="${String(ebook.published)}">${ebook.published?"Despublicar":"Publicar"}</button></div></td>`;body.appendChild(row)}body.querySelectorAll<HTMLButtonElement>(".toggle-button").forEach(button=>button.addEventListener("click",()=>togglePublished(button.dataset.id??"",button.dataset.published==="true",button)))}
-  async function togglePublished(id:string,currentValue:boolean,button:HTMLButtonElement){if(!id||!statusMessage)return;button.disabled=true;statusMessage.textContent="Guardando cambio...";statusMessage.className="status-message";const newValue=!currentValue;const{error}=await supabase.from("ebooks").update({published:newValue,published_at:newValue?new Date().toISOString():null}).eq("id",id);if(error){statusMessage.textContent="No se pudo actualizar el ebook.";statusMessage.classList.add("error");button.disabled=false;return}const ebook=ebooks.find(item=>item.id===id);if(ebook)ebook.published=newValue;updateMetrics();renderEbooks(searchInput?.value??"");statusMessage.textContent=newValue?"Ebook publicado correctamente.":"Ebook guardado como borrador.";statusMessage.classList.add("success")}
+  async function togglePublished(id:string,currentValue:boolean,button:HTMLButtonElement){
+    if(!id||!statusMessage)return;
+
+    button.disabled=true;
+    statusMessage.textContent="Guardando cambio...";
+    statusMessage.className="status-message";
+
+    const newValue=!currentValue;
+
+    const{error}=await supabase
+      .from("ebooks")
+      .update({published:newValue})
+      .eq("id",id);
+
+    if(error){
+      console.error("Error actualizando ebook:",error);
+      statusMessage.textContent=error.message||"No se pudo actualizar el ebook.";
+      statusMessage.classList.add("error");
+      button.disabled=false;
+      return;
+    }
+
+    const ebook=ebooks.find(item=>item.id===id);
+    if(ebook)ebook.published=newValue;
+
+    updateMetrics();
+    renderEbooks(searchInput?.value??"");
+
+    statusMessage.textContent=newValue
+      ?"Ebook publicado correctamente."
+      :"Ebook guardado como borrador.";
+
+    statusMessage.classList.add("success");
+  }
   async function initializeAdmin(){const{data:{session}}=await supabase.auth.getSession();if(!session?.user){window.location.href="/admin/login?redirect="+encodeURIComponent(window.location.pathname);return}const{data:adminRecord,error:adminError}=await supabase.from("admin_users").select("user_id,email").eq("user_id",session.user.id).maybeSingle();if(adminError||!adminRecord){await supabase.auth.signOut();window.location.href="/admin/login";return}if(adminEmail)adminEmail.textContent=adminRecord.email??session.user.email??"Administrador";const{data,error}=await supabase.from("ebooks").select(`id,slug,title,price,currency,cover_url,published,category:categories(name)`).order("display_order",{ascending:true});if(error){if(statusMessage){statusMessage.textContent="No se pudo cargar el catálogo desde Supabase.";statusMessage.classList.add("error")}}else{ebooks=(data??[]) as EbookRow[];updateMetrics();renderEbooks()}if(loadingScreen)loadingScreen.hidden=true;if(app)app.hidden=false}
   searchInput?.addEventListener("input",()=>renderEbooks(searchInput.value));document.querySelector<HTMLButtonElement>("#logout-button")?.addEventListener("click",async()=>{await supabase.auth.signOut();window.location.href="/admin/login"});initializeAdmin();
 </script>
