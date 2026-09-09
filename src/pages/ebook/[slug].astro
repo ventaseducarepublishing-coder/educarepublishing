@@ -347,13 +347,25 @@ export const prerender = false;
         renderEbook(data as Ebook);
       }
 
+      function resetBuyButton() {
+        if (!buyButton) return;
+
+        buyButton.disabled = false;
+        buyButton.textContent = "Comprar ahora";
+        delete buyButton.dataset.checkoutInProgress;
+      }
+
       async function startCheckout() {
         if (!currentEbook || !buyButton) return;
 
+        if (buyButton.dataset.checkoutInProgress === "true") {
+          return;
+        }
+
         const productId =
           currentEbook.legacy_product_id || currentEbook.slug;
-        const originalText = buyButton.textContent || "Comprar ahora";
 
+        buyButton.dataset.checkoutInProgress = "true";
         buyButton.disabled = true;
         buyButton.textContent = "Preparando pago...";
 
@@ -363,6 +375,7 @@ export const prerender = false;
           } = await supabase.auth.getSession();
 
           if (!session) {
+            resetBuyButton();
             window.location.href =
               `/registro?product=${encodeURIComponent(productId)}`;
             return;
@@ -398,10 +411,19 @@ export const prerender = false;
               : "Ocurrió un error al conectar con Mercado Pago."
           );
 
-          buyButton.disabled = false;
-          buyButton.textContent = originalText;
+          resetBuyButton();
         }
       }
+
+      window.addEventListener("pageshow", () => {
+        resetBuyButton();
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          resetBuyButton();
+        }
+      });
 
       const {
         data: { session },
