@@ -298,24 +298,40 @@
                 <span>✓ Certificado EDUCARE</span>
               </div>
 
+              <div class="course-price-box" aria-label="Precio del curso">
+                <div>
+                  <span class="course-price-label">PRECIO LANZAMIENTO</span>
+                  <div class="course-price-row">
+                    <span class="course-price-old">$59.990</span>
+                    <strong class="course-price-current">$39.990</strong>
+                    <span class="course-price-currency">CLP</span>
+                  </div>
+                </div>
+
+                <span class="course-price-saving">Ahorra $20.000</span>
+              </div>
+
               <div class="course-actions">
+                <button
+                  class="course-buy-button"
+                  type="button"
+                  disabled
+                  aria-disabled="true"
+                  title="La compra online del curso se habilitará en el siguiente paso"
+                >
+                  Comprar curso · Próximamente
+                </button>
+
                 <a
-                  class="primary-button"
+                  class="secondary-button"
                   href="https://campus.educarepublishing.cl/course/view.php?id=2"
                 >
                   Ver curso en Campus
                 </a>
-
-                <a
-                  class="secondary-button"
-                  href="https://campus.educarepublishing.cl"
-                >
-                  Ir al Campus
-                </a>
               </div>
 
               <small class="course-note">
-                Próximamente podrás comprar e inscribirte directamente desde Educare Publishing.
+                Próximo paso: habilitar pago con Mercado Pago e inscripción automática al Campus EDUCARE.
               </small>
             </div>
           </article>
@@ -2112,10 +2128,87 @@
     font-weight: 800;
   }
 
+  .course-price-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1.4rem 0 1.5rem;
+    padding: 1.1rem 1.2rem;
+    background: #f7fbfb;
+    border: 1px solid #d6ebe8;
+    border-radius: 16px;
+  }
+
+  .course-price-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #0f7d83;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+  }
+
+  .course-price-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.55rem;
+  }
+
+  .course-price-old {
+    color: #8a9aa8;
+    font-size: 1rem;
+    font-weight: 800;
+    text-decoration: line-through;
+  }
+
+  .course-price-current {
+    color: #17324d;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1;
+  }
+
+  .course-price-currency {
+    color: #60758a;
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .course-price-saving {
+    flex: 0 0 auto;
+    padding: 0.55rem 0.75rem;
+    color: #0f7d83;
+    background: #eaf7f6;
+    border: 1px solid #cfeae8;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 900;
+  }
+
   .course-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.85rem;
+  }
+
+  .course-buy-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.8rem 1.35rem;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 900;
+    background: #0f7d83;
+    border: 0;
+    border-radius: 12px;
+  }
+
+  .course-buy-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.62;
   }
 
   .course-note {
@@ -2463,10 +2556,16 @@
       margin: 1.3rem 1.3rem 0;
     }
 
+    .course-price-box {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
     .course-actions {
       flex-direction: column;
     }
 
+    .course-buy-button,
     .course-actions .primary-button,
     .course-actions .secondary-button {
       width: 100%;
