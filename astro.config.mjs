@@ -10,6 +10,7 @@ const paginasExcluidas = new Set([
   "/nueva-contrasena",
   "/recuperar-contrasena",
   "/ebook/detalle",
+  "/ebook/sopas-del-mundo",
 ]);
 
 export default defineConfig({
